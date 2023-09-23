@@ -1,0 +1,29 @@
+name: Sync Changes to Another Repository Accessible by Graders
+
+on:
+  push:
+    branches:
+      - '*' 
+
+jobs:
+  push_changes:
+    runs-on: ubuntu-latest
+    if: github.repository == 'xic875/AC215_RadIQ'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Setup SSH
+      run: |
+        mkdir -p ~/.ssh/
+        echo "${{ secrets.SYNC_REPO_FOR_GRADING }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
+        git config --global user.email "actions@github.com"
+        git config --global user.name "GitHub Actions"
+
+    - name: Sync to target repository
+      run: |
+        git remote add target-repo git@github.com:ai-xiaihai/AC215_RadIQ.git
+        git push -f target-repo HEAD:main
