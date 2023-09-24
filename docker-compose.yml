@@ -1,0 +1,10 @@
+version: "3.8"
+
+services:
+    data-management:
+        build:
+          context: .
+          dockerfile: Dockerfile
+        environment:
+            GOOGLE_APPLICATION_CREDENTIALS: /secrets/data-service-account.json
+            GCP_PROJECT: "AC215-RadIQ"
