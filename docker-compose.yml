@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+    data-preprocessing:
+        build:
+          context: .
+          dockerfile: ./docker/data_preprocessing/Dockerfile
+        environment:
+            GOOGLE_APPLICATION_CREDENTIALS: /secrets/data-service-account.json
+            GCP_PROJECT: "AC215-RadIQ"
+    data-splitting:
+        build:
+          context: .
+          dockerfile: ./docker/data_splitting/Dockerfile
+        environment:
+            GOOGLE_APPLICATION_CREDENTIALS: /secrets/data-service-account.json
+            GCP_PROJECT: "AC215-RadIQ"
