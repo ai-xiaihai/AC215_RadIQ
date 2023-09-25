@@ -1,0 +1,6 @@
+outs:
+- md5: 8e76eb205e4c884fbca2f7412fd66d40.dir
+  size: 2422088433
+  nfiles: 3143
+  hash: md5
+  path: ms_cxr

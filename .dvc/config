@@ -1,0 +1,4 @@
+[core]
+    remote = radiq-app-data
+['remote "radiq-app-data"']
+    url = gs://radiq-app-data/dvc_store
