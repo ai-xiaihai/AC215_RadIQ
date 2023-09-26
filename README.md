@@ -69,6 +69,9 @@ In this milestone, we worked on the following tasks:
 - This container splits the data into training, validation, and testing sets.
 - The input of this container includes the path to the image data, and the path to the ground-truth label file.
 
+**Data Verison Control**
+- We use [DVC](https://dvc.org) to version our dataset. The metadata file is located in `radiq-app-data/`. There is also a remote copy on google cloud storage at `gs://radiq-app-data/dvc_store/`.
+
 **Useful commands to send data to GCP bucket**
 - Look at data in gcp bucket: `gsutil ls gs://radiq-app-data/ms_cxr/`
 - Copy a single file from local to gcp bucket: `gsutil cp label.csv gs://radiq-app-data/ms_cxr/`
