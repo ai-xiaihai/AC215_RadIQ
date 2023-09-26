@@ -11,13 +11,10 @@ Project Organization
         │   └── data_splitting
         │       └── Dockerfile
         ├── docker-compose.yml
-        ├── models
         ├── notebooks
         │   └── AC215_RadIQ_EDA.ipynb
         ├── radiq-app-data
         │   └── ms_cxr.dvc
-        ├── references
-        ├── reports
         ├── secrets
         │   └── data-service-account.json
         └── src
