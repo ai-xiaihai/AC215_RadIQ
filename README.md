@@ -52,6 +52,13 @@ In this milestone, we worked on the following tasks:
 - Set up DVC.
 - Complete exploratory data analysis.
 
+**Docker Setup**
+- Two Dockerfiles are created in /src/data_preprocessing and /src/data_splitting. They are used to create a 
+  container for data preprocessing and data splitting, respectively. All docker services are managed in 
+  /src/docker-compose.yml. To start a service listed in docker-compose.yml, run `docker-compose up <service-name>` 
+  on the root level directory. 
+- For data preprocessing and data splitting service, we can also run an interactive terminal. To do this, run 
+  `docker-compose run --entrypoint /bin/sh <service-name>` on the root level.
 
 **Preprocess container**
 - This container reads image data, resize them into a common size (e.g., 1024 x 1024), resize the ground-truth bounding box labels, and stores both images and ground-truth label file back to GCP.
