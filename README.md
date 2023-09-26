@@ -3,27 +3,32 @@ AC215-RadIQ
 
 Project Organization
 ---------
-        ├── LICENSE
-        ├── README.md
-        ├── docker
-        │   ├── data_preprocessing
-        │   │   └── Dockerfile
-        │   └── data_splitting
-        │       └── Dockerfile
-        ├── docker-compose.yml
-        ├── notebooks
-        │   └── AC215_RadIQ_EDA.ipynb
-        ├── radiq-app-data
-        │   └── ms_cxr.dvc
-        ├── secrets
-        │   └── data-service-account.json
-        └── src
-            ├── __init__.py
-            ├── build_features.py
-            ├── data_extraction.py
-            ├── data_preprocessing.py
-            ├── data_splitting.py
-            └── run.sh
+- project-root/
+    - LICENSE
+    - README.md
+    - docker-compose.yml
+    - notebooks/
+        - AC215_RadIQ_EDA.ipynb
+    - radiq-app-data/
+        - ms_cxr.dvc
+    - secrets/
+        - data-service-account.json
+    - src/
+        - __init__.py
+        - build_features.py
+        - data_extraction.py
+        - data_preprocessing/
+            - .dockerignore
+            - data_preprocessing.py
+            - Dockerfile
+            - Pipfile
+        - data_splitting/
+            - .dockerignore
+            - data_splitting.py
+            - Dockerfile
+            - Pipfile
+
+
 
 --------
 
