@@ -1,14 +1,16 @@
-import wandb
 import random
+import wandb
 import torch
 from torch import nn
 
 # Create a MLP model with 2 linear layers
 class MLP(nn.Module):
-    def __init__(self):
+    def __init__(self, ckpt_path=None):
         super().__init__()
         self.fc1 = nn.Linear(10, 10)
         self.fc2 = nn.Linear(10, 1)
+        if ckpt_path:
+            self.load_state_dict(torch.load(ckpt_path))
 
     def forward(self, x):
         x = self.fc1(x)
@@ -49,9 +51,12 @@ def train_demo(hyperparam, model, train_loader, val_loader):
         train_acc = 1 - 2 ** -epoch - random.random() / epoch - offset
         val_acc = 1 - 2 ** -epoch - random.random() / epoch - offset
         if log_to_wandb:
+            # Log accuracy metrics
             wandb.log({"train/acc": train_acc, "val/acc": val_acc})
+            # Save model checkpoint
+            torch.save(model.state_dict(), f'./ckpts/{architecture}_{epoch}.pth')
             artifact = wandb.Artifact(f'model_checkpoints_{run.name}', type='model')
-            artifact.add_file(f'{architecture}_{epoch}.pth')
+            artifact.add_file(f'ckpts/{architecture}_{epoch}.pth', name=f'{architecture}_{epoch}.pth')
             wandb.log_artifact(artifact)
         
     # Finish wandb session

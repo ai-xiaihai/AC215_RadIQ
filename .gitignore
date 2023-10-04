@@ -133,3 +133,6 @@ dmypy.json
 
 # wanb folder
 /wandb
+
+# checkpoint folder
+/ckpts
