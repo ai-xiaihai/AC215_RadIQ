@@ -15,3 +15,11 @@ services:
         environment:
             GOOGLE_APPLICATION_CREDENTIALS: /secrets/data-service-account.json
             GCP_PROJECT: "AC215-RadIQ"
+    data-pipeline:
+        build:
+          context: .
+          dockerfile: ./src/data_pipeline/Dockerfile
+        container_name: data-pipeline
+        environment:
+            GOOGLE_APPLICATION_CREDENTIALS: /secrets/data-service-account.json
+            GCP_PROJECT: "AC215-RadIQ"
