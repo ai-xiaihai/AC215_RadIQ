@@ -1,0 +1,42 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+docutils = "==0.16"
+myst-parser = "==0.15.2"
+setuptools = "==65.5.1"
+sphinx = "==4.1.2"
+sphinx-autodoc-typehints = "==1.12.0"
+sphinx-automodapi = "==0.13"
+sphinx-rtd-theme = "==1.0.0"
+twine = "==3.3.0"
+wheel = "==0.38.1"
+bump2version = "==1.0.1"
+coverage = "==6.3.2"
+flake8 = "==5.0.2"
+ipykernel = "==6.15.0"
+ipython = "==7.34.0"
+mypy = "==0.931"
+papermill = "==2.3.4"
+pycobertura = "==2.0.1"
+pytest = "==6.2.2"
+pytest-cov = "==2.11.1"
+pytest-rerunfailures = "==10.2"
+pytest-timeout = "==2.0.1"
+
+[packages]
+huggingface-hub = "==0.6.0"
+pillow = "==9.3.0"
+pydicom = "==2.2.2"
+scikit-image = "==0.18.1"
+SimpleITK = ">=2.1.1.1"
+timm = "==0.6.5"
+torch = ">=1.11.0,<2.0.0"
+torchvision = "*"
+transformers = "==4.17.0"
+pandas = "==1.2.0"
+
+[requires]
+python_version = "3.9"
