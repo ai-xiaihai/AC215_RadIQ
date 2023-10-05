@@ -137,3 +137,9 @@ dmypy.json
 
 # checkpoint folder
 /ckpts
+
+# data folder
+/radiq-app-data/train/*
+/radiq-app-data/val/*
+/radiq-app-data/test/*
+/radiq-app-data/label_1024_split.csv
