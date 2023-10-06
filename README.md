@@ -47,7 +47,9 @@ This project aims to develop an application that allows patients to better under
 **Docker Container**
 - A Dockerfile is created inside /src/data_pipeline. To run it, run `bash docker-shell.sh` on the root level. This will open an interactive bash terminal.
 - Inside the container, go to `src/data_pipeline` and run `bash data_download.sh` to download preprocessed image data from GCP bucket.
-- To train the model, Run `python3 main.py` in the directory /src/data_pipeline.
+- To train the model, Run `python3 main.py --log_to_wandb True` in the directory /src/data_pipeline.
+- Model training: `src/data_pipeline/main.py` - This script implements `torch.utils.data.Dataset` and `torch.utils.data.DataLoader` to enhance data ingestion and management within machine learning components of the project. Then it loads model architecture stored in `/model` and fits the model. It takes the following key arguments:
+    > --log_to_wandb\[bool\]: Flag to log results to wandb, default is False
 
 ### Milestone 2 ###
 In this milestone, we worked on the following tasks:
