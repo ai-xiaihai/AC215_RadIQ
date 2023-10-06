@@ -27,7 +27,7 @@ def parse_args():
     parser.add_argument('--batch-size', type=int, default=32, help='Batch size for data loading')
     parser.add_argument('--split', type=str, default='train', choices=['train', 'val', 'test'], help='Data split to use')
     parser.add_argument('--epochs', type=int, default=5, help='Data split to use')
-    parser.add_argument('--log_to_wandb', type=bool, default=False, help='Data split to use')
+    parser.add_argument('--log_to_wandb', type=bool, default=True, help='Flag to log results to wandb')
     parser.add_argument('--architecture', type=str, default='BioViL', help='model architecture')
     return parser.parse_args()
 

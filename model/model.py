@@ -10,7 +10,7 @@ from typing import Callable, List, Optional
 from math import ceil, floor
 
 
-class ImageTextModel:
+class ImageTextModel(nn.Module):
     def __init__(
         self,
         image_inference_engine: ImageInferenceEngine,
@@ -18,6 +18,7 @@ class ImageTextModel:
         width,
         height,
     ) -> None:
+        super(ImageTextModel, self).__init__()
         self.image_model = image_inference_engine.model
         self.text_inference_engine = text_inference_engine
         self.width = width
