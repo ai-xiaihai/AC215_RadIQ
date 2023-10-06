@@ -32,7 +32,7 @@ Project Organization
 
 --------
 
-# AC215 - Milestone2 - Interactive X-ray Insight
+# AC215 - Interactive X-ray Insight
 
 **Team Members**
 Martin Ma, Lily Wang, Frank Cheng, Linglai Chen, Chenbing Wang
@@ -73,12 +73,11 @@ Below you can see the output from our Weights & Biases page. We used this tool t
 
 
 **Data pipline container**
-- This container contains all our training scripts and modeling components.
+- This container contains all our model training scripts.
 - Run `bash docker-shell.sh` to build and run the data-pipeline Docker container.
 - Ensure you have the secret file `secrets/data-service-account.json` before running the container. Once inside the container, you can execute `bash data_download.sh` to download the data from our GCP bucket.
 - Inside the container, run `pip install pipenv && pipenv sync && pipenv shell` to set up a virtual environment with the necessary dependencies.
-- To train the model, run `python3 main.py --log_to_wandb True` in the directory `/src/data_pipeline`
-- `src/data_pipeline/main.py` - This script implements `torch.utils.data.Dataset` and `torch.utils.data.DataLoader` to enhance data ingestion and management within machine learning components of the project. Then it loads model architecture stored in `/model` and fits the model. It takes the following key arguments:
+- Inside the container, go to `src/data_pipeline`, run `python3 main.py --log_to_wandb True` to train the model. This script implements `torch.utils.data.Dataset` and `torch.utils.data.DataLoader` to enhance data ingestion and management within machine learning components of the project. Then it loads model architecture stored in `/model` and fits the model. It takes the following key arguments:
     > --log_to_wandb\[bool\]: Flag to log results to wandb, default is False
 
 **Data Verison Control**
