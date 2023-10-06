@@ -35,7 +35,7 @@ class MSCXR(Dataset):
     def __init__(self, image_dir, label_file, split, device, transform):
         self.image_dir = os.path.join(image_dir, split)
         df = pd.read_csv(label_file)
-        self.dataframe = df[df['split'] == split]
+        self.dataframe = df[df["split"] == split]
         self.device = device
         self.transform = transform
 
