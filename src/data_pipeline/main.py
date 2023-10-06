@@ -111,10 +111,10 @@ def main():
                 row_x, row_y, row_w, row_h = (ground_truth_boxes[i]).detach().int()
 
                 # Calculate the sum within the box
-                # sum_val = torch.sum(
-                #     similarity_map[i][row_x : row_x + row_w, row_y : row_y + row_h]
-                # )
-                # loss -= sum_val / torch.sum(similarity_map[i]) / tmp_batch_size
+                sum_val = torch.sum(
+                    similarity_map[i][row_x : row_x + row_w, row_y : row_y + row_h]
+                )
+                loss -= sum_val / torch.sum(similarity_map[i]) / tmp_batch_size
 
             if args.log_to_wandb:
                 wandb.log({f"{args.split}/loss": loss})
