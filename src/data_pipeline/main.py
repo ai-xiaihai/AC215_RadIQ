@@ -6,7 +6,6 @@ sys.path.append(path_to_model)
 
 from typing import List
 from pathlib import Path
-
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -33,11 +32,12 @@ model = ImageTextModel(
     height=1024,
 )
 
+
 class MSCXR(Dataset):
     def __init__(self, image_dir, label_file, split, device, transform):
         self.image_dir = os.path.join(image_dir, split)
         df = pd.read_csv(label_file)
-        self.dataframe = df[df['split'] == split]
+        self.dataframe = df[df["split"] == split]
         self.device = device
         self.transform = transform
 
@@ -59,10 +59,10 @@ class MSCXR(Dataset):
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Load Data
-image_dir = "./../../radiq-app-data"
-label_file = "./../../radiq-app-data/label_1024_split.csv"
+image_dir = "./../../radiq-app-data/ms_cxr"
+label_file = "./../../radiq-app-data/ms_cxr/label_1024_split.csv"
 
-train_dataset = MSCXR(image_dir, label_file, 'train', device, image_inference.transform)
+train_dataset = MSCXR(image_dir, label_file, "train", device, image_inference.transform)
 # train_dataset = MSCXR(image_dir, label_file, 'val', device, image_inference.transform)
 # train_dataset = MSCXR(image_dir, label_file, 'test', device, image_inference.transform)
 
@@ -70,16 +70,16 @@ batch_size = 5
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
 
-
 criterion = nn.MSELoss()
-opt_params = list(model.text_inference_engine.model.parameters()) + list(model.image_model.parameters())
+opt_params = list(model.text_inference_engine.model.parameters()) + list(
+    model.image_model.parameters()
+)
 optimizer = optim.Adam(opt_params, lr=0.001)
 
 n_epochs = 10
 # model.to(device)
 
 for epoch in range(n_epochs):
-
     for batch_idx, (images, text_prompt, ground_truth_boxes) in enumerate(train_loader):
         loss = 0
 

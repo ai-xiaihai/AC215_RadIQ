@@ -1,26 +1,53 @@
-# Use an existing base image as a starting point.
-FROM debian:bullseye-slim
 
-# Install required dependencies (including curl and apt-transport-https).
-RUN apt-get update && apt-get install -y curl apt-transport-https ca-certificates gnupg
+#FROM debian:bullseye-slim
+FROM python:3.9-slim-buster
 
-# Add the Google Cloud SDK repository and GPG key.
-RUN curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - && \
-    echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | tee /etc/apt/sources.list.d/google-cloud-sdk.list
+ARG DEBIAN_PACKAGES="build-essential git curl wget unzip gzip curl apt-transport-https ca-certificates gnupg"
 
-# Install Python
-RUN apt-get update && apt-get install -y python3 python3-pip
+# Prevent apt from showing prompts
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Install Google Cloud SDK and additional components.
-RUN apt-get install google-cloud-sdk -y
+# Python wants UTF-8 locale
+ENV LANG=C.UTF-8
 
-# Set up authentication (you can configure this later).
-COPY secrets/data-service-account.json /root/.config/gcloud/key.json
+# Tell pipenv where the shell is. This allows us to use "pipenv shell" as a
+# container entry point.
+ENV PYENV_SHELL=/bin/bash
 
-WORKDIR /src/data_pipeline/
+# Tell Python to disable buffering so we don't lose any logs.
+ENV PYTHONUNBUFFERED=1
 
-# Add Pipfile.lock
-COPY /src/data_pipeline/Pipfile.lock /src/data_pipeline/
+# Ensure we have an up to date baseline, install dependencies and
+# create a user so we don't run the app as root
+RUN set -ex; \
+    for i in $(seq 1 8); do mkdir -p "/usr/share/man/man${i}"; done && \
+    apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y --no-install-recommends $DEBIAN_PACKAGES && \
+    apt-get install -y --no-install-recommends software-properties-common apt-transport-https ca-certificates gnupg2 gnupg-agent curl openssh-client && \
+    curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - && \
+    echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
+    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends google-cloud-sdk && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    pip install --no-cache-dir --upgrade pip && \
+    pip install pipenv && \
+    mkdir -p /app
 
-# RUN pip install pipenv && pipenv sync
+# Switch
+WORKDIR /app
+
+# Install python packages
+ADD src/data_pipeline/Pipfile src/data_pipeline/Pipfile.lock /app/
+
+RUN pipenv sync
+
+# Add the rest of the source code. This is done last so we don't invalidate all
+# layers when we change a line of code.
+ADD . /app
+
+# Entry point
+ENTRYPOINT ["pipenv","shell"]
 
