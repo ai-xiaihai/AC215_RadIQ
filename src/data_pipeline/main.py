@@ -1,5 +1,8 @@
 import sys
-sys.path.append('/Users/wangxiaochen/Desktop/AC215/AC215_RadIQ/model')
+import os
+
+path_to_model = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'model'))
+sys.path.append(path_to_model)
 
 from typing import List
 from pathlib import Path
@@ -9,7 +12,6 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 import pandas as pd
-import os
 
 from health_multimodal.text import get_bert_inference
 from health_multimodal.text.utils import BertEncoderType
