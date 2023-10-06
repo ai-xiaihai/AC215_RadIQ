@@ -37,6 +37,7 @@ torch = ">=1.11.0,<2.0.0"
 torchvision = "*"
 transformers = "==4.17.0"
 pandas = "==1.2.0"
+wandb = "*"
 
 [requires]
 python_version = "3.9"
