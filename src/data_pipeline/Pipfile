@@ -38,6 +38,7 @@ transformers = "==4.17.0"
 pandas = "==1.2.0"
 wandb = "*"
 scikit-image = "*"
+protobuf = "*"
 
 [requires]
 python_version = "3.9"
