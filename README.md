@@ -72,6 +72,11 @@ In this milestone, we worked on the following tasks:
 **Data Verison Control**
 - We use [DVC](https://dvc.org) to version our dataset. The metadata file is located in `radiq-app-data/`. There is also a remote copy on google cloud storage at `gs://radiq-app-data/dvc_store/`.
 
+**Data Pipeline**
+- Run `bash docker-shell.sh` to build and run the data-pipeline Docker container.
+- Ensure you have the secret file `secrets/data-service-account.json` before running the container. Once inside the container, you can execute `bash data_download.sh` to download the data from our GCP bucket.
+- Inside the container, run `pip install pipenv && pipenv sync && pipenv shell` to set up a virtual environment with the necessary dependencies.
+
 **Useful commands to send data to GCP bucket**
 - Look at data in gcp bucket: `gsutil ls gs://radiq-app-data/ms_cxr/`
 - Copy a single file from local to gcp bucket: `gsutil cp label.csv gs://radiq-app-data/ms_cxr/`

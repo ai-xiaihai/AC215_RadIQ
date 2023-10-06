@@ -22,5 +22,5 @@ WORKDIR /src/data_pipeline/
 # Add Pipfile.lock
 COPY /src/data_pipeline/Pipfile.lock /src/data_pipeline/
 
-RUN pip install pipenv && pipenv sync
+# RUN pip install pipenv && pipenv sync
 
