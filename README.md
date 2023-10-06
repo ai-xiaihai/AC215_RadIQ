@@ -43,6 +43,11 @@ RadIQ
 **Project**
 This project aims to develop an application that allows patients to better understand their chest X-ray diagnosis through an interactive web interface. By integrating chest X-rays with their associated radiology reports through multi-modal learning, users can highlight any phrases in the report, which would light up the relevant region on the X-ray.
 
+### Milestone 3 ###
+**Docker Container**
+- A Dockerfile is created inside /src/data_pipeline. To run it, run `bash docker-shell.sh` on the root level. This will open an interactive bash terminal.
+- Inside the container, go to `src/data_pipeline` and run `bash data_download.sh` to download preprocessed image data from GCP bucket.
+- To train the model, Run `python3 main.py` in the directory /src/data_pipeline.
 
 ### Milestone 2 ###
 In this milestone, we worked on the following tasks:
