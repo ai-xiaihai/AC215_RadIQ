@@ -2,7 +2,7 @@
 from typing import List
 
 import torch
-
+import torch.nn as nn
 import torch.nn.functional as F
 from health_multimodal.text import TextInferenceEngine
 from health_multimodal.image import ImageInferenceEngine
