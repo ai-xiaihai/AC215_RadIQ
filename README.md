@@ -53,13 +53,52 @@ RadIQ
 This project aims to develop an application that allows patients to better understand their chest X-ray diagnosis through an interactive web interface. By integrating chest X-rays with their associated radiology reports through multi-modal learning, users can highlight any phrases in the report, which would light up the relevant region on the X-ray.
 
 ### Milestone 3 ###
-In this milestone, we undertook significant refinements to optimize our data pipeline process. Initially, we utilized a shell script to retrieve data from the GCP bucket due to constraints with gsfuse. While this approach was functional, it was far from optimal, putting undue strain on memory resources. Recognizing this inefficiency, we delved into a more streamlined approach: mounting data directly from GCP. This change required an intricate understanding of cloud resources and a redesign of our data management strategy, but it enabled us to achieve more efficient data loading for training.
 
-Regarding the modeling process, we began with the selection of a cutting-edge model adept in self-supervised vision–language processing, equipped with pretrained weights. Adapting such an advanced model to our specific needs presented its own set of challenges. We undertook the task of modifying and fine-tuning this model to our dataset. Our objective was nuanced – predicting box coordinates corresponding to text prompts. We first ensured that it worked on the virtual environment using pipenv. Further complicating our task was the need to ensure compatibility and efficiency within a containerized environment. To seamlessly integrate this with Docker, we meticulously crafted both the Pipfile and Dockerfile, ensuring that all dependencies and configurations were precisely aligned.
+**Data Loading**
+
+In this milestone, we undertook significant refinements to optimize our data pipeline process. 
+1. Initially, we created a shell script to retrieve data from the GCP bucket. While this approach was functional, it was far from optimal, putting undue strain on memory / disk resources, and it's not scalable.
+2. Recognizing this inefficiency, we refactored this process to use the `google-cloud-storage` library to mount the data directly from GCP. This change required an intricate understanding of cloud resources and a redesign of our data management strategy, but it enabled us to achieve more efficient data loading for training. Note that this is not part of the curriculum, but we decided to take on this challenge to improve our project and allow more people to use it.
+
+As a quick experiment, we first used the following script to verify that our docker can list out all the files in the GCP bucket:
+```python
+from google.cloud import storage
+
+def list_blobs(bucket_name, prefix=None):
+    """Lists all the blobs in the bucket."""
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(bucket_name)
+    
+    blobs = bucket.list_blobs(prefix=prefix)
+
+    for blob in blobs:
+        print(blob.name)
+
+if __name__ == "__main__":
+    bucket_name = "radiq-app-data"
+    prefix = "ms_cxr/"
+    list_blobs(bucket_name, prefix)
+```
+
+**Modelling**
+
+On the modelling, we decided to work with the state-of-the-art biomedical vision-language model, `BioViL`, published by Microsoft in 2022.
+Although the pretrained weights are givne, adapting such an advanced model to our specific needs presented its own set of challenges. We undertook the task of modifying and fine-tuning this model to our dataset. Our objective was nuanced – predicting box coordinates corresponding to text prompts. We first ensured that it worked on the virtual environment using pipenv. Further complicating our task was the need to ensure compatibility and efficiency within a containerized environment. To seamlessly integrate this with Docker, we meticulously crafted both the Pipfile and Dockerfile, ensuring that all dependencies and configurations were precisely aligned.
+
+Since the SOTA model is in PyTorch, our dataloader is also generated in PyTorch. Similar to TensorFlow's `tf.data` (what we seen in class), PyTorch's `DataLoader` is another robust tools to efficiently manage data for deep learning.
 
 **Experiment Tracking**
+
 Below you can see the output from our Weights & Biases page. We used this tool to track several iterations of our model training. It was tracked using the `wandb` library we included inside of our `src/data_pipeline/main.py` script.
 ![WandB Screenshot](./images/wandb.png)
+
+**Vertex AI**
+
+To allow serverless training, we adopt Google Cloud's Vertex AI. With this, we can easily train our model on the cloud without worrying about the infrastructure. We also use Vertex AI to deploy our model as an API endpoint. This allows us to easily integrate our model with our web application. Note that we have not been able to get GPU Quotas, so we are running with CPU only. Hopefully, we can get GPU Quotas soon and significantly speed up our training process.
+
+![WandB Screenshot](./images/vertexAI.png)
+
+Furthermore, we have a fully functional docker container as well. This allows us to easily deploy our model on any cloud platform, including AWS, Azure, and GCP. To this date, we have 2 tools behind our belt - a containerized training pipeline to run on compute nodes and Vertex AI.
 
 
 **Docker Setup**
