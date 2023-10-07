@@ -80,9 +80,6 @@ if __name__ == "__main__":
     list_blobs(bucket_name, prefix)
 ```
 
-Additionally, our dataloader, implemented using PyTorch, is an integral component of our project. Its primary function is to load and preprocess our datasets efficiently. At the moment, it's housed within our model training script at `src/data_pipeline/main.py`. However, in line with best practices and for improved modularity, we have plans to separate it and relocate it to the data folder in the near future. This dataloader has been crafted to ensure optimal memory utilization and is versatile enough to manage diverse data formats.
-
-
 **Modelling**
 
 On the modelling, we decided to work with the state-of-the-art biomedical vision-language model, `BioViL`, published by Microsoft in 2022.
