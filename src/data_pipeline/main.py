@@ -24,7 +24,7 @@ from model import ImageTextModel
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--lr', type=float, default=0.001, help='Learning rate for optimizer')
-    parser.add_argument('--batch-size', type=int, default=32, help='Batch size for data loading')
+    parser.add_argument('--batch-size', type=int, default=16, help='Batch size for data loading')
     parser.add_argument('--split', type=str, default='train', choices=['train', 'val', 'test'], help='Data split to use')
     parser.add_argument('--epochs', type=int, default=5, help='Data split to use')
     parser.add_argument('--log_to_wandb', type=bool, default=True, help='Flag to log results to wandb')
