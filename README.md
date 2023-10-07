@@ -123,9 +123,8 @@ Furthermore, we have a fully functional docker container as well. This allows us
 
 
 **Data pipline container**
-- FIXME: GCP mounting
 - Ensure you have the secret file `secrets/data-service-account.json` before running the container. Once inside the container, you can execute `bash data_download.sh` to download the data from our GCP bucket.
-- Inside the container, run `pip install pipenv && pipenv sync && pipenv shell` to set up a virtual environment with the necessary dependencies.
+- At root, run `bash docker-shell.sh`
 - Inside the container, go to `src/data_pipeline`, run `python3 main.py --log_to_wandb True` to train the model. This script implements `torch.utils.data.Dataset` and `torch.utils.data.DataLoader` to enhance data ingestion and management within machine learning components of the project. Then it loads model architecture stored in `/model` and fits the model. It takes the following key arguments:
     > --log_to_wandb\[bool\]: Flag to log results to wandb, default is False
 
