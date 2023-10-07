@@ -80,6 +80,9 @@ if __name__ == "__main__":
     list_blobs(bucket_name, prefix)
 ```
 
+Additionally, our dataloader, implemented using PyTorch, is an integral component of our project. Its primary function is to load and preprocess our datasets efficiently. At the moment, it's housed within our model training script at `src/data_pipeline/main.py`. However, in line with best practices and for improved modularity, we have plans to separate it and relocate it to the data folder in the near future. This dataloader has been crafted to ensure optimal memory utilization and is versatile enough to manage diverse data formats.
+
+
 **Modelling**
 
 On the modelling, we decided to work with the state-of-the-art biomedical vision-language model, `BioViL`, published by Microsoft in 2022.
@@ -122,7 +125,7 @@ Furthermore, we have a fully functional docker container as well. This allows us
 - The input of this container includes the path to the image data, and the path to the ground-truth label file.
 
 
-**Data pipline container**
+**Data pipline (model training) container**
 - Ensure you have the secret file `secrets/data-service-account.json` before running the container. Once inside the container, you can execute `bash data_download.sh` to download the data from our GCP bucket.
 - At root, run `bash docker-shell.sh`
 - Inside the container, go to `src/data_pipeline`, run `python3 main.py --log_to_wandb True` to train the model. This script implements `torch.utils.data.Dataset` and `torch.utils.data.DataLoader` to enhance data ingestion and management within machine learning components of the project. Then it loads model architecture stored in `/model` and fits the model. It takes the following key arguments:
