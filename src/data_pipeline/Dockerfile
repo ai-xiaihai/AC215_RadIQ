@@ -42,6 +42,8 @@ WORKDIR /app
 # Install python packages
 ADD src/data_pipeline/Pipfile src/data_pipeline/Pipfile.lock /app/
 
+COPY secrets/data-service-account.json /root/.config/gcloud/key.json
+
 RUN pipenv sync
 
 # Add the rest of the source code. This is done last so we don't invalidate all

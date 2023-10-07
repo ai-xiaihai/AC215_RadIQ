@@ -39,6 +39,7 @@ pandas = "==1.2.0"
 wandb = "*"
 scikit-image = "*"
 protobuf = "*"
+google-cloud-storage = "*"
 
 [requires]
 python_version = "3.9"
