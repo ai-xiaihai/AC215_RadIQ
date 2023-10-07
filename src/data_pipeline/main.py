@@ -12,13 +12,20 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 import pandas as pd
+from google.cloud import storage
+from io import BytesIO
+from PIL import Image
+import numpy as np
 
 from health_multimodal.text import get_bert_inference
 from health_multimodal.text.utils import BertEncoderType
 from health_multimodal.image import get_image_inference
 from health_multimodal.image.utils import ImageModelType
 from health_multimodal.image.data.io import load_image
+from health_multimodal.image.data.io import remap_to_uint8
 from model import ImageTextModel
+
+from google.cloud import storage
 
 
 def parse_args():
@@ -27,14 +34,21 @@ def parse_args():
     parser.add_argument('--batch-size', type=int, default=16, help='Batch size for data loading')
     parser.add_argument('--split', type=str, default='train', choices=['train', 'val', 'test'], help='Data split to use')
     parser.add_argument('--epochs', type=int, default=5, help='Data split to use')
-    parser.add_argument('--log_to_wandb', type=bool, default=True, help='Flag to log results to wandb')
+    parser.add_argument('--log_to_wandb', type=bool, default=False, help='Flag to log results to wandb')
     parser.add_argument('--architecture', type=str, default='BioViL', help='model architecture')
     return parser.parse_args()
 
+
 class MSCXR(Dataset):
-    def __init__(self, image_dir, label_file, split, device, transform):
-        self.image_dir = os.path.join(image_dir, split)
-        df = pd.read_csv(label_file)
+    def __init__(self, bucket_name, label_file, split, device, transform):
+        # Set up GCS bucket
+        self.bucket = storage.Client().bucket(bucket_name)
+        self.prefix = os.path.join("ms_cxr", split)
+
+        # Load label file
+        blob = storage.Blob(label_file, self.bucket)
+        data = blob.download_as_text()
+        df = pd.read_csv(BytesIO(data.encode()))
         self.dataframe = df[df["split"] == split]
         self.device = device
         self.transform = transform
@@ -43,15 +57,22 @@ class MSCXR(Dataset):
         return len(self.dataframe)
 
     def __getitem__(self, idx):
+        # Get label
         row = self.dataframe.iloc[idx]
         text_prompt = row.label_text
         ground_truth_boxes = torch.tensor([row.x, row.y, row.w, row.h])
 
-        image_path = Path(f"{self.image_dir}/{row.dicom_id}.jpg")
-        image = load_image(image_path)
+        # Get image
+        image_blob = storage.Blob(f"{self.prefix}/{row.dicom_id}.jpg", self.bucket)
+        image_data = image_blob.download_as_bytes()
+        image = Image.open(BytesIO(image_data))
+        image = np.array(image)
+        image = remap_to_uint8(image)
+        image = Image.fromarray(image).convert("L")
         transformed_image = self.transform(image)
 
         return transformed_image, text_prompt, ground_truth_boxes
+    
 
 def main():
     args = parse_args()
@@ -60,21 +81,20 @@ def main():
     text_inference = get_bert_inference(BertEncoderType.BIOVIL_T_BERT)
     image_inference = get_image_inference(ImageModelType.BIOVIL_T)
 
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    bucket_name = "radiq-app-data"
+    label_file = "ms_cxr/label_1024_split.csv"
+    train_dataset = MSCXR(bucket_name, label_file, "train", device, image_inference.transform)
+
+    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
+
     model = ImageTextModel(
         image_inference_engine=image_inference,
         text_inference_engine=text_inference,
         width=1024,
         height=1024,
     )
-
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-    # Load Data
-    image_dir = "./../../radiq-app-data/ms_cxr"
-    label_file = "./../../radiq-app-data/ms_cxr/label_1024_split.csv"
-
-    train_dataset = MSCXR(image_dir, label_file, args.split, device, image_inference.transform)
-    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
 
     opt_params = list(model.text_inference_engine.model.parameters()) + list(model.image_model.parameters())
     optimizer = optim.Adam(opt_params, lr=args.lr)
@@ -137,6 +157,7 @@ def main():
 
     # Finish wandb session
     wandb.finish()
+
 
 if __name__ == "__main__":
     main()

@@ -4,8 +4,8 @@ set -e
 
 export IMAGE_NAME=radiq-data-preprocessing
 export BASE_DIR=$(pwd)
-export SECRETS_DIR=$(pwd)/../secrets/
-export DATA_DIR=$(pwd)/../radiq-app-data/
+export SECRETS_DIR=$(pwd)/secrets/
+export DATA_DIR=$(pwd)/radiq-app-data/
 export GCP_PROJECT="AC215-RadIQ"
 export DOCKERFILE="src/data_pipeline/Dockerfile"
 
