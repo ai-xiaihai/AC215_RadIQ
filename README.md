@@ -28,6 +28,39 @@ Project Organization
             - Dockerfile
             - Pipfile
 
+.
+├── LICENSE
+├── README.md
+├── advanced_training
+│   └── wandb_demo.py
+├── data_download.sh
+├── docker-compose.yml
+├── docker-shell.sh
+├── images
+│   └── wandb.png
+├── model
+│   ├── health_multimodal <- this directory includes all components that model.py need
+│   └── model.py
+├── notebooks
+│   └── AC215_RadIQ_EDA.ipynb
+├── radiq-app-data
+└── src
+    ├── __init__.py
+    ├── data_extraction.py
+    ├── data_pipeline
+    │   ├── Dockerfile
+    │   ├── Pipfile
+    │   ├── Pipfile.lock
+    │   ├── data_download.sh
+    │   └── main.py
+    ├── data_preprocessing
+    │   ├── Dockerfile
+    │   ├── Pipfile
+    │   └── data_preprocessing.py
+    └── data_splitting
+        ├── Dockerfile
+        ├── Pipfile
+        └── data_splitting.py
 
 
 --------
@@ -44,23 +77,25 @@ RadIQ
 This project aims to develop an application that allows patients to better understand their chest X-ray diagnosis through an interactive web interface. By integrating chest X-rays with their associated radiology reports through multi-modal learning, users can highlight any phrases in the report, which would light up the relevant region on the X-ray.
 
 ### Milestone 3 ###
+In this milestone, we undertook significant refinements to optimize our data pipeline process. Initially, we utilized a shell script to retrieve data from the GCP bucket due to constraints with gsfuse. While this approach was functional, it was far from optimal, putting undue strain on memory resources. Recognizing this inefficiency, we delved into a more streamlined approach: mounting data directly from GCP. This change required an intricate understanding of cloud resources and a redesign of our data management strategy, but it enabled us to achieve more efficient data loading for training.
+
+Regarding the modeling process, we began with the selection of a cutting-edge model adept in self-supervised vision–language processing, equipped with pretrained weights. Adapting such an advanced model to our specific needs presented its own set of challenges. We undertook the task of modifying and fine-tuning this model to our dataset. Our objective was nuanced – predicting box coordinates corresponding to text prompts. We first ensured that it worked on the virtual environment using pipenv. Further complicating our task was the need to ensure compatibility and efficiency within a containerized environment. To seamlessly integrate this with Docker, we meticulously crafted both the Pipfile and Dockerfile, ensuring that all dependencies and configurations were precisely aligned.
 
 **Experiment Tracking**
 Below you can see the output from our Weights & Biases page. We used this tool to track several iterations of our model training. It was tracked using the `wandb` library we included inside of our `src/data_pipeline/main.py` script.
 ![WandB Screenshot](./images/wandb.png)
 
 
-**Docker Container**
-- A Dockerfile is created inside /src/data_pipeline. To run it, run `bash docker-shell.sh` on the root level. This will open an interactive bash terminal.
-- Inside the container, go to `src/data_pipeline` and run `bash data_download.sh` to download preprocessed image data from GCP bucket.
-
 **Docker Setup**
-- Two Dockerfiles are created in /src/data_preprocessing and /src/data_splitting. They are used to create a 
-  container for data preprocessing and data splitting, respectively. All docker services are managed in 
-  /src/docker-compose.yml. To start a service listed in docker-compose.yml, run `docker-compose up <service-name>` 
-  on the root level directory. 
-- For data preprocessing and data splitting service, we can also run an interactive terminal. To do this, run 
-  `docker-compose run --entrypoint /bin/sh <service-name>` on the root level.
+- Milstone 3
+    - A Dockerfile is created inside /src/data_pipeline.
+- Milestone 2
+    - Two Dockerfiles are created in /src/data_preprocessing and /src/data_splitting. They are used to create a 
+      container for data preprocessing and data splitting, respectively. All docker services are managed in 
+      /src/docker-compose.yml. To start a service listed in docker-compose.yml, run `docker-compose up <service-name>` 
+      on the root level directory. 
+    - For data preprocessing and data splitting service, we can also run an interactive terminal. To do this, run 
+      `docker-compose run --entrypoint /bin/sh <service-name>` on the root level.
 
 **Preprocess container**
 - This container reads image data, resize them into a common size (e.g., 1024 x 1024), resize the ground-truth bounding box labels, and stores both images and ground-truth label file back to GCP.
@@ -73,8 +108,7 @@ Below you can see the output from our Weights & Biases page. We used this tool t
 
 
 **Data pipline container**
-- This container contains all our model training scripts.
-- Run `bash docker-shell.sh` to build and run the data-pipeline Docker container.
+- FIXME: GCP mounting
 - Ensure you have the secret file `secrets/data-service-account.json` before running the container. Once inside the container, you can execute `bash data_download.sh` to download the data from our GCP bucket.
 - Inside the container, run `pip install pipenv && pipenv sync && pipenv shell` to set up a virtual environment with the necessary dependencies.
 - Inside the container, go to `src/data_pipeline`, run `python3 main.py --log_to_wandb True` to train the model. This script implements `torch.utils.data.Dataset` and `torch.utils.data.DataLoader` to enhance data ingestion and management within machine learning components of the project. Then it loads model architecture stored in `/model` and fits the model. It takes the following key arguments:
