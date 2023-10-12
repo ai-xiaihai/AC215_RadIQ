@@ -41,6 +41,7 @@ scikit-image = "*"
 protobuf = "*"
 google-cloud-storage = "*"
 google-cloud-aiplatform = "*"
+python-json-logger = "*"
 
 [requires]
 python_version = "3.9"

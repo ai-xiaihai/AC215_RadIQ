@@ -27,6 +27,7 @@ export CMDARGS="--model_name=mobilenetv2,--epochs=30,--batch_size=32,--wandb_key
 
 
 # Run training with No GPU
+# export EXECUTOR_IMAGE_URI="us-docker.pkg.dev/vertex-ai/training/tf-cpu.2-12.py310:latest"
 export EXECUTOR_IMAGE_URI="us-docker.pkg.dev/vertex-ai/training/tf-cpu.2-12.py310:latest"
 gcloud ai custom-jobs create \
   --region=$GCP_REGION \

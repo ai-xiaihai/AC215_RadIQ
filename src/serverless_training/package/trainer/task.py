@@ -1,7 +1,8 @@
 import sys
 import os
-path_to_model = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'model'))
-sys.path.append(path_to_model)
+
+print(sys.path)
+print(os.getcwd())
 
 import argparse
 import wandb
