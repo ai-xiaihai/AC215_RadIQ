@@ -132,8 +132,8 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# wanb folder
-/wandb
+# wandb folder
+*/wandb/*
 
 # checkpoint folder
 /ckpts
