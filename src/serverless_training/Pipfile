@@ -27,6 +27,7 @@ pytest-rerunfailures = "==10.2"
 pytest-timeout = "==2.0.1"
 
 [packages]
+matplotlib = "==3.4.3"
 huggingface-hub = "==0.6.0"
 pillow = "==9.3.0"
 pydicom = "==2.2.2"
