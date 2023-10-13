@@ -132,8 +132,8 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# wanb folder
-/wandb
+# wandb folder
+**/wandb/*
 
 # checkpoint folder
 /ckpts
@@ -143,3 +143,6 @@ dmypy.json
 /radiq-app-data/val/*
 /radiq-app-data/test/*
 /radiq-app-data/label_1024_split.csv
+
+# DS_Store
+**/.DS_Store
