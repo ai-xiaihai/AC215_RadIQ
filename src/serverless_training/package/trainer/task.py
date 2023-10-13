@@ -1,8 +1,8 @@
 import sys
 import os
 
-print(sys.path)
-print(os.getcwd())
+# Add to sys path
+sys.path.append(os.path.join(os.path.dirname(__file__), "../../../..", "model"))
 
 import argparse
 import wandb
