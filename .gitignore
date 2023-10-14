@@ -136,7 +136,7 @@ dmypy.json
 **/wandb/*
 
 # checkpoint folder
-/ckpts
+**/ckpts/*
 
 # data folder
 /radiq-app-data/train/*

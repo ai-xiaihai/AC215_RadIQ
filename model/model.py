@@ -19,7 +19,7 @@ class ImageTextModel(nn.Module):
         height,
     ) -> None:
         super(ImageTextModel, self).__init__()
-        self.image_model = image_inference_engine.model
+        self.image_inference_engine = image_inference_engine.model
         self.text_inference_engine = text_inference_engine
         self.width = width
         self.height = height
@@ -53,7 +53,7 @@ class ImageTextModel(nn.Module):
         text_embedding = self.text_inference_engine.get_embeddings_from_prompt(
             query_text
         )
-        image_embedding = self.image_model.get_patchwise_projected_embeddings(
+        image_embedding = self.image_inference_engine.get_patchwise_projected_embeddings(
             images, normalize=False
         )
 

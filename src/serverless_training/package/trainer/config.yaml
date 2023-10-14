@@ -1,0 +1,11 @@
+lr: 0.0001
+batch_size: 16
+epochs: 5
+log_to_wandb: true
+architecture: biovil
+resize: 512
+
+# set to "" if you don't want to load a checkpoint
+# "./ckpts/bioviL_image_4.pth"
+img_ckpt: ""
+txt_ckpt: ""
