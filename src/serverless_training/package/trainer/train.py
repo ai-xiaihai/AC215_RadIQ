@@ -30,13 +30,18 @@ def train(config_path: str = "config.yaml"):
     # Load BioViL Model
     text_inference = get_bert_inference(BertEncoderType.CXR_BERT)
     image_inference = get_image_inference(ImageModelType.BIOVIL)
-
     model = ImageTextModel(
         image_inference_engine=image_inference,
         text_inference_engine=text_inference,
         width=config['resize'],
         height=config['resize'],
     )
+
+    # Load checkpoint if exists
+    if config['img_ckpt']:
+        model.image_inference_engine.load_state_dict(torch.load(config['img_ckpt']))
+    if config['txt_ckpt']:
+        model.text_inference_engine.model.load_state_dict(torch.load(config['txt_ckpt']))
 
     # Define loss function and optimizer
     criterion = torch.nn.BCEWithLogitsLoss()
@@ -56,7 +61,7 @@ def train(config_path: str = "config.yaml"):
             )
 
     # Train
-    for epoch in range(config['epochs']):
+    for epoch in range(1, config['epochs']+1):
 
         for batch_idx, data in enumerate(train_loader):
             # Unpack data
@@ -91,8 +96,9 @@ def train(config_path: str = "config.yaml"):
 
             if batch_idx % 1 == 0:
                 print(
-                    f"Epoch {epoch+1}/{config['epochs']}, Batch {batch_idx}/{len(train_loader)}, Loss: {loss.item()}"
+                    f"Epoch {epoch}/{config['epochs']}, Batch {batch_idx}/{len(train_loader)}, Loss: {loss.item()}"
                 )
+                break
         
         # Validation #TODO
         train_iou = 0
@@ -102,11 +108,13 @@ def train(config_path: str = "config.yaml"):
             # Log
             wandb.log({"train/acc": train_iou, "val/acc": val_iou})
             
-            # Save model
+            # Save image encoder
             torch.save(model.image_inference_engine.state_dict(), f'./ckpts/{config["architecture"]}_image_{epoch}.pth')
             artifact_img = wandb.Artifact(f'image_checkpoints_{run.name}', type='model')
-            artifact_img.add_file(f'./ckpts/{config["architecture"]}_image.pth', name=f'{config["architecture"]}_image_{epoch}.pth')
+            artifact_img.add_file(f'./ckpts/{config["architecture"]}_image_{epoch}.pth', name=f'{config["architecture"]}_image_{epoch}.pth')
             wandb.log_artifact(artifact_img)
+            
+            # Save text encoder
             torch.save(model.text_inference_engine.model.state_dict(), f'./ckpts/{config["architecture"]}_text_{epoch}.pth')
             artifact_txt = wandb.Artifact(f'text_checkpoints_{run.name}', type='model')
             artifact_txt.add_file(f'./ckpts/{config["architecture"]}_text_{epoch}.pth', name=f'{config["architecture"]}_text_{epoch}.pth')
