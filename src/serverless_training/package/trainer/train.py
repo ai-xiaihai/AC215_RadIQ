@@ -7,6 +7,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../../../..", "model"))
 import argparse
 import wandb
 import torch
+import torch.nn as nn
 import torch.optim as optim
 
 from health_multimodal.text import get_bert_inference
@@ -19,16 +20,16 @@ from dataset_mscxr import get_mscxr_dataloader
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--lr', type=float, default=0.001, help='Learning rate for optimizer')
+    parser.add_argument('--lr', type=float, default=0.0001, help='Learning rate for optimizer')
     parser.add_argument('--batch-size', type=int, default=16, help='Batch size for data loading')
     parser.add_argument('--split', type=str, default='train', choices=['train', 'val', 'test'], help='Data split to use')
     parser.add_argument('--epochs', type=int, default=5, help='Data split to use')
-    parser.add_argument('--log_to_wandb', type=bool, default=False, help='Flag to log results to wandb')
+    parser.add_argument('--log_to_wandb', type=bool, default=True, help='Flag to log results to wandb')
     parser.add_argument('--architecture', type=str, default='BioViL', help='model architecture')
     return parser.parse_args()
     
 
-def main():
+def train():
     args = parse_args()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     resize = 512
@@ -48,7 +49,8 @@ def main():
         height=resize,
     )
 
-    # Define optimizer
+    # Define loss function and optimizer
+    criterion = torch.nn.BCEWithLogitsLoss()
     opt_params = list(model.text_inference_engine.model.parameters()) + list(model.image_inference_engine.parameters())
     optimizer = optim.Adam(opt_params, lr=args.lr)
 
@@ -81,13 +83,13 @@ def main():
             )
 
             # Generate masks
-            masks = -1 * torch.ones_like(similarity_map)
+            masks = torch.zeros_like(similarity_map)
             for i in range(images.shape[0]):
                 row_x, row_y, row_w, row_h = (ground_truth_boxes[i]).detach().int()
                 masks[i][row_x : row_x + row_w, row_y : row_y + row_h] = 1
             
             # Calculate loss
-            loss = -torch.sum(similarity_map * masks) / images.shape[0]
+            loss = criterion(similarity_map.unsqueeze(1), masks.unsqueeze(1))
 
             # Backprop
             optimizer.zero_grad()
@@ -108,15 +110,22 @@ def main():
         val_iou = 0
 
         if args.log_to_wandb:
+            # Log
             wandb.log({"train/acc": train_iou, "val/acc": val_iou})
-            torch.save(model.state_dict(), f'./ckpts/{args.architecture}_{epoch}.pth')
-            artifact = wandb.Artifact(f'model_checkpoints_{run.name}', type='model')
-            artifact.add_file(f'ckpts/{args.architecture}_{epoch}.pth', name=f'{args.architecture}_{epoch}.pth')
-            wandb.log_artifact(artifact)
+            
+            # Save model
+            torch.save(model.image_inference_engine.state_dict(), f'./ckpts/{args.architecture}_image_{epoch}.pth')
+            artifact_img = wandb.Artifact(f'image_checkpoints_{run.name}', type='model')
+            artifact_img.add_file(f'./ckpts/{args.architecture}_image.pth', name=f'{args.architecture}_image_{epoch}.pth')
+            wandb.log_artifact(artifact_img)
+            torch.save(model.text_inference_engine.model.state_dict(), f'./ckpts/{args.architecture}_text_{epoch}.pth')
+            artifact_txt = wandb.Artifact(f'text_checkpoints_{run.name}', type='model')
+            artifact_txt.add_file(f'./ckpts/{args.architecture}_text_{epoch}.pth', name=f'{args.architecture}_text_{epoch}.pth')
+            wandb.log_artifact(artifact_txt)
 
     # Finish wandb session
     wandb.finish()
 
 
 if __name__ == "__main__":
-    main()
+    train()
