@@ -1,25 +1,25 @@
 import sys
 import os
+import pdb
 
 # Add to sys path
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../../..", "model"))
 
-import argparse
 import yaml
 import wandb
 import torch
 import torch.optim as optim
-
 from health_multimodal.text import get_bert_inference
 from health_multimodal.text.utils import BertEncoderType
 from health_multimodal.image import get_image_inference
 from health_multimodal.image.utils import ImageModelType
 from model import ImageTextModel
 from dataset_mscxr import get_mscxr_dataloader
-from eval import evaluate
+from eval import evaluate, dice
 
     
 def run_experiment(config_path):
+    """Wrapper on top of train(), determine whether to hyperparameter sweep or simply training."""
     # Load configuartions
     with open(config_path, "r") as f:
         config = yaml.safe_load(f)
@@ -36,6 +36,7 @@ def run_experiment(config_path):
     
 
 def train(config):
+    """Training script for BioViL model."""
     # Intialize wandb
     if config['log_to_wandb']:
         run = wandb.init(project="AC215-RadIQ")
@@ -93,14 +94,16 @@ def train(config):
                 interpolation="bilinear",
             )
 
-            # Generate masks
+            # Generate gt masks
             masks = torch.zeros_like(similarity_map)
             for i in range(images.shape[0]):
                 row_x, row_y, row_w, row_h = (ground_truth_boxes[i]).detach().int()
                 masks[i][row_x : row_x + row_w, row_y : row_y + row_h] = 1
             
             # Calculate loss
-            loss = criterion(similarity_map.unsqueeze(1), masks.unsqueeze(1))
+            loss_bce = criterion(similarity_map.unsqueeze(1), masks.unsqueeze(1))
+            loss_dice = 1 - dice(similarity_map, masks).mean()
+            loss = loss_bce + loss_dice
 
             # Backprop
             optimizer.zero_grad()
@@ -109,7 +112,11 @@ def train(config):
 
             # Logging
             if config['log_to_wandb']:
-                wandb.log({f"train/loss": loss})
+                wandb.log({
+                    f"train/loss": loss,
+                    f"train/loss_bce": loss_bce,
+                    f"train/loss_dice": loss_dice,
+                })
 
             if batch_idx % 1 == 0:
                 print(
