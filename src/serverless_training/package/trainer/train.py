@@ -66,6 +66,7 @@ def train(config):
         width=config['resize'],
         height=config['resize'],
     )
+    model.to(device)
 
     # Load checkpoint if exists
     if config['img_ckpt']:
