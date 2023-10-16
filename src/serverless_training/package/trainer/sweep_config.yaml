@@ -6,7 +6,7 @@ parameters:
   lr:
     distribution: log_uniform
     min: -11
-    max: -6
+    max: -4
   batch_size:
     values: [16, 32]
 count: 20

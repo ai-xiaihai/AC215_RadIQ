@@ -103,7 +103,7 @@ def train(config):
             
             # Calculate loss
             loss_bce = criterion(similarity_map.unsqueeze(1), masks.unsqueeze(1))
-            loss_dice = 1 - dice(similarity_map, masks).mean()
+            loss_dice = 1 - dice(similarity_map > config["threshold"], masks).mean()
             loss = loss_bce + loss_dice
 
             # Backprop
