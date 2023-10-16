@@ -30,7 +30,7 @@ def run_experiment(config_path):
             sweep_configuration = yaml.safe_load(file)
     
         sweep_id = wandb.sweep(sweep=sweep_configuration, project='AC215-RadIQ')
-        wandb.agent(sweep_id, function=lambda:train(config), count=20) 
+        wandb.agent(sweep_id, function=lambda:train(config), count=sweep_configuration["count"]) 
     else:
         train(config) # Train without sweeping
     

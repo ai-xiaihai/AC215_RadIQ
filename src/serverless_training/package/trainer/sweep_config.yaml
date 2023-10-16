@@ -9,3 +9,4 @@ parameters:
     max: -6
   batch_size:
     values: [16, 32]
+count: 20
