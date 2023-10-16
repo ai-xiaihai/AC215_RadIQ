@@ -4,6 +4,7 @@ import os
 # Add to sys path
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../../..", "model"))
 
+import argparse
 import yaml
 import wandb
 import torch
@@ -15,12 +16,40 @@ from health_multimodal.image import get_image_inference
 from health_multimodal.image.utils import ImageModelType
 from model import ImageTextModel
 from dataset_mscxr import get_mscxr_dataloader
-    
+from eval import evaluate
 
-def train(config_path: str = "config.yaml"):
+    
+def run_experiment(config_path):
     # Load configuartions
     with open(config_path, "r") as f:
         config = yaml.safe_load(f)
+
+    # If sweep is true, perform a sweep
+    if config["sweep"]:
+        with open("sweep_config.yaml", 'r') as file:
+            sweep_configuration = yaml.safe_load(file)
+    
+        sweep_id = wandb.sweep(sweep=sweep_configuration, project='AC215-RadIQ')
+        wandb.agent(sweep_id, function=lambda:train(config), count=20) 
+    else:
+        train(config) # Train without sweeping
+    
+
+def train(config):
+    # Intialize wandb
+    if config['log_to_wandb']:
+        run = wandb.init(project="AC215-RadIQ")
+        run.config.epochs = config['epochs']
+        run.config.architecture = config["architecture"]
+
+        if config['sweep']:
+            run.config.learning_rate = wandb.config['lr']
+            run.config.batch_size = wandb.config['batch_size']
+            
+        else:
+            run.config.learning_rate = config['lr']
+            run.config.batch_size = config['batch_size']
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Load dataset
@@ -47,18 +76,6 @@ def train(config_path: str = "config.yaml"):
     criterion = torch.nn.BCEWithLogitsLoss()
     opt_params = list(model.text_inference_engine.model.parameters()) + list(model.image_inference_engine.parameters())
     optimizer = optim.Adam(opt_params, lr=config['lr'])
-
-    # Intialize wandb
-    if config['log_to_wandb']:
-        run = wandb.init(
-                project="AC215-RadIQ",
-                config={
-                    "epochs": config['epochs'],
-                    "learning_rate": config['lr'],
-                    "batch_size": config['batch_size'],
-                    "architecture": config["architecture"]
-                }
-            )
 
     # Train
     for epoch in range(1, config['epochs']+1):
@@ -98,15 +115,14 @@ def train(config_path: str = "config.yaml"):
                 print(
                     f"Epoch {epoch}/{config['epochs']}, Batch {batch_idx}/{len(train_loader)}, Loss: {loss.item()}"
                 )
-                break
         
-        # Validation #TODO
-        train_iou = 0
-        val_iou = 0
+        # Validation
+        train_dice = evaluate(model, train_loader, config['threshold'], device)
+        val_dice = evaluate(model, val_loader, config['threshold'], device)
 
         if config['log_to_wandb']:
             # Log
-            wandb.log({"train/acc": train_iou, "val/acc": val_iou})
+            wandb.log({"train/acc": train_dice, "val/acc": val_dice})
             
             # Save image encoder
             torch.save(model.image_inference_engine.state_dict(), f'./ckpts/{config["architecture"]}_image_{epoch}.pth')
@@ -125,4 +141,4 @@ def train(config_path: str = "config.yaml"):
 
 
 if __name__ == "__main__":
-    train("config.yaml")
+    run_experiment("config.yaml")
