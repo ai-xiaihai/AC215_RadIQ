@@ -96,9 +96,9 @@ class ImageTextModel(nn.Module):
         # print(projected_text_embeddings.shape)
         # similarity_map = patch_wise_similarity.reshape(batch_size, n_patches_h, n_patches_w)
         # return similarity_map
-        similarity_map = torch.einsum(
-            "bhwc,bc->bhw", projected_patch_embeddings, projected_text_embeddings
-        )
+        # similarity_map = torch.einsum("bhwc,bc->bhw", projected_patch_embeddings, projected_text_embeddings)
+        cos_sim = torch.nn.CosineSimilarity(dim=1, eps=1e-6)
+        similarity_map = cos_sim(projected_patch_embeddings, projected_text_embeddings.unsqueeze(1).unsqueeze(2))
         return similarity_map
 
     @staticmethod
