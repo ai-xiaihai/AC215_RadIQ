@@ -54,12 +54,12 @@ def train(config):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Load dataset
-    train_loader = get_mscxr_dataloader("train", config["batch_size"], device)
+    train_loader = get_mscxr_dataloader("train", config["batch_size"], device) # TODO
     val_loader = get_mscxr_dataloader("val", config['batch_size'], device)
 
     # Load BioViL Model
-    text_inference = get_bert_inference(BertEncoderType.CXR_BERT)
-    image_inference = get_image_inference(ImageModelType.BIOVIL)
+    text_inference = get_bert_inference(BertEncoderType.BIOVIL_T_BERT)
+    image_inference = get_image_inference(ImageModelType.BIOVIL_T)
     model = ImageTextModel(
         image_inference_engine=image_inference,
         text_inference_engine=text_inference,
@@ -75,12 +75,16 @@ def train(config):
         model.text_inference_engine.model.load_state_dict(torch.load(config['txt_ckpt']))
 
     # Define loss function and optimizer
-    criterion = torch.nn.BCEWithLogitsLoss()
+    criterion = torch.nn.BCELoss()
+    sig = torch.nn.Sigmoid()
     opt_params = list(model.text_inference_engine.model.parameters()) + list(model.image_inference_engine.parameters())
     optimizer = optim.Adam(opt_params, lr=config['lr'])
 
     # Train
     for epoch in range(1, config['epochs']+1):
+        # Set training mode
+        model.text_inference_engine.model.train()
+        model.image_inference_engine.train()
 
         for batch_idx, data in enumerate(train_loader):
             # Unpack data
@@ -94,16 +98,23 @@ def train(config):
                 query_text=text_prompt,
                 interpolation="bilinear",
             )
+            similarity_map = sig(similarity_map)
 
             # Generate gt masks
             masks = torch.zeros_like(similarity_map)
             for i in range(images.shape[0]):
                 row_x, row_y, row_w, row_h = (ground_truth_boxes[i]).detach().int()
-                masks[i][row_x : row_x + row_w, row_y : row_y + row_h] = 1
-            
+                masks[i][row_y : row_y + row_h, row_x : row_x + row_w] = 1
+
+            # Generate background masks
+            background_masks = torch.ones_like(masks) - masks
+            masks = torch.stack([background_masks, masks], dim=1)
+            similarity_map_background = torch.ones_like(similarity_map) - similarity_map
+            similarity_map = torch.stack([similarity_map_background, similarity_map], dim=1)
+
             # Calculate loss
-            loss_bce = criterion(similarity_map.unsqueeze(1), masks.unsqueeze(1))
-            loss_dice = 1 - dice(similarity_map > config["threshold"], masks).mean()
+            loss_bce = criterion(similarity_map, masks)
+            loss_dice = 1 - dice((similarity_map > config["threshold"]).float(), masks).mean()
             loss = loss_bce + loss_dice
 
             # Backprop
@@ -130,7 +141,7 @@ def train(config):
 
         if config['log_to_wandb']:
             # Log
-            wandb.log({"train/acc": train_dice, "val/acc": val_dice})
+            wandb.log({"train/dice": train_dice, "val/dice": val_dice})
             
             # Save image encoder
             torch.save(model.image_inference_engine.state_dict(), f'./ckpts/{config["architecture"]}_image_{epoch}.pth')

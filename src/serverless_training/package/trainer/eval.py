@@ -101,7 +101,7 @@ class UnitTest:
 
     def test_eval(self):    
         # Load dataset
-        batch_size = 16
+        batch_size = 32
         threshold = 0.3
         val_loader = get_mscxr_dataloader("val", batch_size, self.device)
 
