@@ -1,7 +1,12 @@
+import sys
+import os
+import pdb
+
+# Add to sys path
+sys.path.append(os.path.join(os.path.dirname(__file__), "../../../..", "model"))
 
 import torch
 import torch.nn as nn
-import numpy as np
 
 from health_multimodal.text import get_bert_inference
 from health_multimodal.text.utils import BertEncoderType
@@ -10,7 +15,6 @@ from health_multimodal.image.utils import ImageModelType
 from model import ImageTextModel
 from dataset_mscxr import get_mscxr_dataloader
 
-import torch
 
 def dice(pred_mask, gt_mask, epsilon=1e-6):
     """
@@ -73,8 +77,8 @@ def evaluate(model: nn.Module, loader: torch.utils.data.DataLoader, threshold: i
             masks = torch.zeros_like(similarity_map)
             for i in range(images.shape[0]):
                 row_x, row_y, row_w, row_h = (ground_truth_boxes[i]).detach().int()
-                masks[i][row_x : row_x + row_w, row_y : row_y + row_h] = 1
-
+                masks[i][row_y : row_y + row_h, row_x : row_x + row_w] = 1
+            
             # Calculate Dice score for each sample in the batch
             cur_dice = dice(pred_masks, masks)
             tot_dice += cur_dice.sum().item()
@@ -98,20 +102,19 @@ class UnitTest:
     def test_eval(self):    
         # Load dataset
         batch_size = 16
-        resize = 512
         threshold = 0.3
-        val_loader = get_mscxr_dataloader("val", batch_size, resize, self.device)
+        val_loader = get_mscxr_dataloader("val", batch_size, self.device)
 
         # Load BioViL Model
-        text_inference = get_bert_inference(BertEncoderType.CXR_BERT)
-        image_inference = get_image_inference(ImageModelType.BIOVIL)
+        text_inference = get_bert_inference(BertEncoderType.BIOVIL_T_BERT)
+        image_inference = get_image_inference(ImageModelType.BIOVIL_T)
         model = ImageTextModel(
             image_inference_engine=image_inference,
             text_inference_engine=text_inference,
-            width=resize,
-            height=resize,
+            width=1024,
+            height=1024,
         )
-        
+        model.to(self.device)
         val_dice = evaluate(model, val_loader, threshold, self.device)
         print("Test Evaluation: SUCCESS! Validation dice: ", val_dice)
     

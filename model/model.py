@@ -9,6 +9,8 @@ from health_multimodal.image import ImageInferenceEngine
 from typing import Callable, List, Optional
 from math import ceil, floor
 
+import pdb
+
 
 class ImageTextModel(nn.Module):
     def __init__(
@@ -54,7 +56,8 @@ class ImageTextModel(nn.Module):
             query_text
         )
         image_embedding = self.image_inference_engine.get_patchwise_projected_embeddings(
-            images, normalize=False
+            # images, normalize=False
+            images, normalize=True
         )
 
         sim = self._get_similarity_maps_from_embeddings(image_embedding, text_embedding)
@@ -97,7 +100,7 @@ class ImageTextModel(nn.Module):
         # similarity_map = patch_wise_similarity.reshape(batch_size, n_patches_h, n_patches_w)
         # return similarity_map
         # similarity_map = torch.einsum("bhwc,bc->bhw", projected_patch_embeddings, projected_text_embeddings)
-        cos_sim = torch.nn.CosineSimilarity(dim=1, eps=1e-6)
+        cos_sim = torch.nn.CosineSimilarity(dim=-1, eps=1e-6)
         similarity_map = cos_sim(projected_patch_embeddings, projected_text_embeddings.unsqueeze(1).unsqueeze(2))
         return similarity_map
 

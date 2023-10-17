@@ -54,8 +54,8 @@ def train(config):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Load dataset
-    train_loader = get_mscxr_dataloader("train", config["batch_size"], config['resize'], device)
-    val_loader = get_mscxr_dataloader("val", config['batch_size'], config['resize'], device)
+    train_loader = get_mscxr_dataloader("train", config["batch_size"], device)
+    val_loader = get_mscxr_dataloader("val", config['batch_size'], device)
 
     # Load BioViL Model
     text_inference = get_bert_inference(BertEncoderType.CXR_BERT)
@@ -63,8 +63,8 @@ def train(config):
     model = ImageTextModel(
         image_inference_engine=image_inference,
         text_inference_engine=text_inference,
-        width=config['resize'],
-        height=config['resize'],
+        width=1024,
+        height=1024,
     )
     model.to(device)
 
