@@ -1,12 +1,12 @@
 method: random
 metric:
-  name: val/acc
+  name: val/iou
   goal: maximize
 parameters:
   lr:
     distribution: log_uniform
-    min: -11
-    max: -4
+    min: -10
+    max: -3
   batch_size:
     values: [16, 32]
-count: 20
+count: 30

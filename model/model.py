@@ -23,11 +23,12 @@ class ImageTextModel(nn.Module):
         super(ImageTextModel, self).__init__()
         self.image_inference_engine = image_inference_engine.model
         self.text_inference_engine = text_inference_engine
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.box_head = nn.Sequential(
             nn.Linear(14 * 14 + 4, 50),
             nn.ReLU(),
             nn.Linear(50, 4),
-        )
+        ).to(device)
         self.width = width
         self.height = height
         self.resize_size, self.crop_size = (

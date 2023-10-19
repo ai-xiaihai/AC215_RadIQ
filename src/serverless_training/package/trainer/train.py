@@ -15,7 +15,7 @@ from health_multimodal.image import get_image_inference
 from health_multimodal.image.utils import ImageModelType
 from model import ImageTextModel
 from dataset_mscxr import get_mscxr_dataloader
-from eval import evaluate, dice
+from eval import evaluate, dice, get_iou
 
     
 def run_experiment(config_path):
@@ -76,7 +76,7 @@ def train(config):
 
     # Define loss function and optimizer
     criterion = torch.nn.SmoothL1Loss()
-    opt_params = list(model.text_inference_engine.model.parameters()) + list(model.image_inference_engine.parameters())
+    opt_params = list(model.text_inference_engine.model.parameters()) + list(model.image_inference_engine.parameters()) + list(model.box_head.parameters())
     optimizer = optim.Adam(opt_params, lr=config['lr'])
 
     # Set training mode
@@ -101,6 +101,7 @@ def train(config):
 
             # Calculate loss
             loss = criterion(pred_boxes, ground_truth_boxes)
+            miou = get_iou(pred_boxes, ground_truth_boxes).mean()
 
             # Backprop
             optimizer.zero_grad()
@@ -111,22 +112,24 @@ def train(config):
             if config['log_to_wandb']:
                 wandb.log({
                     f"train/loss": loss,
-                    # f"train/loss_bce": loss_bce,
-                    # f"train/loss_dice": loss_dice,
+                    f"train/miou": miou,
+                    f"train/gt_box": ground_truth_boxes[0].tolist(),
+                    f"train/pred_box": pred_boxes[0].tolist(),
                 })
 
             if batch_idx % 1 == 0:
                 print(
-                    f"Epoch {epoch}/{config['epochs']}, Batch {batch_idx}/{len(train_loader)}, Loss: {loss.item()}"
+                    f"Epoch {epoch}/{config['epochs']}, Batch {batch_idx}/{len(train_loader)}, Loss: {loss.item()}, mIoU: {miou.item()}"
                 )
+                
         
         # Validation
-        train_dice = evaluate(model, train_loader, config['threshold'], device)
-        val_dice = evaluate(model, val_loader, config['threshold'], device)
+        train_iou = evaluate(model, train_loader, device)
+        val_iou = evaluate(model, val_loader, device)
 
         if config['log_to_wandb']:
             # Log
-            wandb.log({"train/dice": train_dice, "val/dice": val_dice})
+            wandb.log({"train/iou": train_iou, "val/iou": val_iou})
             
             # Save image encoder
             torch.save(model.image_inference_engine.state_dict(), f'./ckpts/{config["architecture"]}_image_{epoch}.pth')

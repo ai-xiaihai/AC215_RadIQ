@@ -1,11 +1,10 @@
-log_to_wandb: false
-sweep: false
+log_to_wandb: true
+sweep: true
 lr: 0.001
-batch_size: 16
-epochs: 5
+batch_size: 32
+epochs: 20
 architecture: biovil
 resize: 512
-threshold: 0.0
 
 # set to "" if you don't want to load a checkpoint
 # "./ckpts/bioviL_image_4.pth"
