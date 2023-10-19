@@ -23,6 +23,11 @@ class ImageTextModel(nn.Module):
         super(ImageTextModel, self).__init__()
         self.image_inference_engine = image_inference_engine.model
         self.text_inference_engine = text_inference_engine
+        self.box_head = nn.Sequential(
+            nn.Linear(14 * 14 + 4, 50),
+            nn.ReLU(),
+            nn.Linear(50, 4),
+        )
         self.width = width
         self.height = height
         self.resize_size, self.crop_size = (
@@ -72,6 +77,54 @@ class ImageTextModel(nn.Module):
             interpolation=interpolation,
         )
         return resized_sim_maps
+    
+    def get_bbox_from_raw_data(
+        self,
+        images: torch.Tensor,
+        query_text: List[str],
+    ) -> torch.Tensor:
+        """
+        Get the bounding box from image and text pairs.
+        """
+        with torch.no_grad():
+             # Get embedding
+            text_embedding = self.text_inference_engine.get_embeddings_from_prompt(
+                query_text
+            )
+            image_embedding = self.image_inference_engine.get_patchwise_projected_embeddings(
+                images, normalize=True
+            )
+
+            # Generate similarity map
+            sim = self._get_similarity_maps_from_embeddings(image_embedding, text_embedding)
+
+        # Convert similarity map to bounding box
+        bbox = self.convert_similarity_to_bbox(
+            sim,
+            width=self.width,
+            height=self.height,
+            resize_size=self.resize_size,
+            crop_size=self.crop_size,
+        )
+        return bbox
+    
+
+    def convert_similarity_to_bbox(
+        self, similarity_map: torch.Tensor, width: int, height: int, resize_size: Optional[int], crop_size: Optional[int]
+    ):
+        # Flatten similarity map        
+        B = similarity_map.shape[0]
+        x = similarity_map.view(B, -1)
+        
+        # Add metadata
+        metadata = torch.Tensor([width, height, resize_size, crop_size]).float().to(x.device)
+        metadata = metadata.unsqueeze(0).expand(B, -1)
+        x = torch.cat([x, metadata], dim=1)
+
+        # Run object detection head
+        x = self.box_head(x)
+        return x
+
 
     @staticmethod
     def _get_similarity_maps_from_embeddings(

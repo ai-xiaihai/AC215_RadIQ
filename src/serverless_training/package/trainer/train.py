@@ -75,16 +75,17 @@ def train(config):
         model.text_inference_engine.model.load_state_dict(torch.load(config['txt_ckpt']))
 
     # Define loss function and optimizer
-    criterion = torch.nn.BCELoss()
-    sig = torch.nn.Sigmoid()
+    criterion = torch.nn.SmoothL1Loss()
     opt_params = list(model.text_inference_engine.model.parameters()) + list(model.image_inference_engine.parameters())
     optimizer = optim.Adam(opt_params, lr=config['lr'])
 
+    # Set training mode
+    model.text_inference_engine.model.eval()
+    model.image_inference_engine.eval()
+    model.box_head.train()
+
     # Train
     for epoch in range(1, config['epochs']+1):
-        # Set training mode
-        model.text_inference_engine.model.train()
-        model.image_inference_engine.train()
 
         for batch_idx, data in enumerate(train_loader):
             # Unpack data
@@ -92,30 +93,14 @@ def train(config):
             text_prompt = data["text"]
             ground_truth_boxes = data["ground_truth_boxes"].to(device)
 
-            # Forward run
-            similarity_map = model.get_similarity_maps_from_raw_data(
+            # Forward pass
+            pred_boxes = model.get_bbox_from_raw_data(
                 images=images,
                 query_text=text_prompt,
-                interpolation="bilinear",
             )
-            similarity_map = sig(similarity_map)
-
-            # Generate gt masks
-            masks = torch.zeros_like(similarity_map)
-            for i in range(images.shape[0]):
-                row_x, row_y, row_w, row_h = (ground_truth_boxes[i]).detach().int()
-                masks[i][row_y : row_y + row_h, row_x : row_x + row_w] = 1
-
-            # Generate background masks
-            background_masks = torch.ones_like(masks) - masks
-            masks_all = torch.stack([background_masks, masks], dim=1)
-            similarity_map_background = torch.ones_like(similarity_map) - similarity_map
-            similarity_map_all = torch.stack([similarity_map_background, similarity_map], dim=1)
 
             # Calculate loss
-            loss_bce = criterion(similarity_map_all, masks_all)
-            loss_dice = 1 - dice((similarity_map > config["threshold"]).float(), masks).mean()
-            loss = loss_bce + loss_dice
+            loss = criterion(pred_boxes, ground_truth_boxes)
 
             # Backprop
             optimizer.zero_grad()
@@ -126,8 +111,8 @@ def train(config):
             if config['log_to_wandb']:
                 wandb.log({
                     f"train/loss": loss,
-                    f"train/loss_bce": loss_bce,
-                    f"train/loss_dice": loss_dice,
+                    # f"train/loss_bce": loss_bce,
+                    # f"train/loss_dice": loss_dice,
                 })
 
             if batch_idx % 1 == 0:
