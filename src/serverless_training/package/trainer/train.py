@@ -108,12 +108,12 @@ def train(config):
 
             # Generate background masks
             background_masks = torch.ones_like(masks) - masks
-            masks = torch.stack([background_masks, masks], dim=1)
+            masks_all = torch.stack([background_masks, masks], dim=1)
             similarity_map_background = torch.ones_like(similarity_map) - similarity_map
-            similarity_map = torch.stack([similarity_map_background, similarity_map], dim=1)
+            similarity_map_all = torch.stack([similarity_map_background, similarity_map], dim=1)
 
             # Calculate loss
-            loss_bce = criterion(similarity_map, masks)
+            loss_bce = criterion(similarity_map_all, masks_all)
             loss_dice = 1 - dice((similarity_map > config["threshold"]).float(), masks).mean()
             loss = loss_bce + loss_dice
 
