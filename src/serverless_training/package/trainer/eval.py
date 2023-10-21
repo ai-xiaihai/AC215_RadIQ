@@ -7,8 +7,8 @@ from health_multimodal.text import get_bert_inference
 from health_multimodal.text.utils import BertEncoderType
 from health_multimodal.image import get_image_inference
 from health_multimodal.image.utils import ImageModelType
-from model import ImageTextModel
-from dataset_mscxr import get_mscxr_dataloader
+from trainer.model import ImageTextModel
+from trainer.dataset_mscxr import get_mscxr_dataloader
 
 import torch
 
