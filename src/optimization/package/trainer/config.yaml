@@ -2,7 +2,7 @@ log_to_wandb: true
 sweep: true
 lr: 0.001
 batch_size: 16
-epochs: 15
+epochs: 6
 architecture: biovil
 threshold: 0.0
 resize: 512

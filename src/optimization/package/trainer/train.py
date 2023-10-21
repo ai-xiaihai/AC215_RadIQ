@@ -89,6 +89,7 @@ def train(config):
     model.box_head.train()
 
     # Train
+    best_val_dice = 0
     for epoch in range(1, config['epochs']+1):
 
         for batch_idx, data in enumerate(train_loader):
@@ -133,7 +134,7 @@ def train(config):
                     f"Epoch {epoch}/{config['epochs']}, Batch {batch_idx}/{len(train_loader)}, Loss: {loss.item()}, dice: {dice_score.item()}"
                 )
             
-            if batch_idx % 5 == 0:
+            if batch_idx % 10 == 0:
                 # Visualize
                 path = Path(f"../../../../radiq-app-data/train/" + dicom_id[0])
                 fig = plot_phrase_grounding_similarity_map(
@@ -147,10 +148,11 @@ def train(config):
         # Validation
         train_dice = evaluate(model, train_loader, config["threshold"], device)
         val_dice = evaluate(model, val_loader, config["threshold"], device)
+        best_val_dice = max(best_val_dice, val_dice)
 
         if config['log_to_wandb']:
             # Log
-            wandb.log({"train/dice": train_dice, "val/dice": val_dice, "val/best_dice": wandb.run.summary.get("best_dice", 0)})
+            wandb.log({"train/dice": train_dice, "val/dice": val_dice, "val/best_dice": best_val_dice})
 
             # Save box/segmentation head
             torch.save(model.box_head.state_dict(), f'./ckpts/{config["architecture"]}_box_head_{epoch}.pth')
