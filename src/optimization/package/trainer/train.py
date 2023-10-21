@@ -150,7 +150,7 @@ def train(config):
 
         if config['log_to_wandb']:
             # Log
-            wandb.log({"train/dice": train_dice, "val/dice": val_dice})
+            wandb.log({"train/dice": train_dice, "val/dice": val_dice, "val/best_dice": wandb.run.summary.get("best_dice", 0)})
 
             # Save box/segmentation head
             torch.save(model.box_head.state_dict(), f'./ckpts/{config["architecture"]}_box_head_{epoch}.pth')
