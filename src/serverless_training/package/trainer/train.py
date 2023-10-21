@@ -1,7 +1,6 @@
 import sys
 import os
 from pathlib import Path
-import matplotlib.pyplot as plt
 import pdb
 
 # Add to sys path
@@ -78,10 +77,10 @@ def train(config):
         model.text_inference_engine.model.load_state_dict(torch.load(config['txt_ckpt']))
 
     # Define loss function and optimizer
-    criterion = torch.nn.BCELoss()
-    sig = torch.nn.Sigmoid()
     opt_params = list(model.box_head.parameters())
     optimizer = optim.Adam(opt_params, lr=config['lr'])
+    criterion = torch.nn.BCEWithLogitsLoss(reduction="none")
+    sig = torch.nn.Sigmoid()
 
     # Set training mode
     model.text_inference_engine.model.eval()
@@ -103,16 +102,6 @@ def train(config):
                 images=images,
                 query_text=text_prompt,
             )
-            pred_mask = sig(pred_mask)
-
-            # Visualize
-            path = Path(f"../../../../radiq-app-data/train/" + dicom_id[0])
-            fig = plot_phrase_grounding_similarity_map(
-                path, 
-                pred_mask[0].detach().cpu().numpy(), 
-                [ground_truth_boxes[0].cpu().numpy().tolist()]
-            )
-            fig.savefig(f"test_{epoch}_{batch_idx}.png")
 
             # Generate gt masks
             masks = torch.zeros_like(pred_mask)
@@ -120,16 +109,11 @@ def train(config):
                 row_x, row_y, row_w, row_h = (ground_truth_boxes[i]).detach().int()
                 masks[i][row_y : row_y + row_h, row_x : row_x + row_w] = 1
 
-            # Generate background masks
-            background_masks = torch.ones_like(masks) - masks
-            masks_all = torch.stack([background_masks, masks], dim=1)
-            pred_mask_background = torch.ones_like(pred_mask) - pred_mask
-            pred_mask_all = torch.stack([pred_mask_background, pred_mask], dim=1)
-
             # Calculate loss
-            bce = criterion(pred_mask_all, masks_all)
-            dice_score = dice(masks, pred_mask > 0.5).mean()
-            loss = bce
+            bce = criterion(pred_mask, masks)
+            bce = (config["ratio"] * masks + 1) * bce
+            loss = bce.mean()
+            dice_score = dice(masks, pred_mask > 0.0).mean()
 
             # Backprop
             optimizer.zero_grad()
@@ -139,7 +123,6 @@ def train(config):
             # Logging
             if config['log_to_wandb']:
                 wandb.log({
-                    f"train/bce": bce,
                     f"train/miou": dice_score,
                     f"train/loss": loss,
                 })
@@ -148,6 +131,16 @@ def train(config):
                 print(
                     f"Epoch {epoch}/{config['epochs']}, Batch {batch_idx}/{len(train_loader)}, Loss: {loss.item()}, dice: {dice_score.item()}"
                 )
+            
+            if batch_idx % 5 == 0:
+                # Visualize
+                path = Path(f"../../../../radiq-app-data/train/" + dicom_id[0])
+                fig = plot_phrase_grounding_similarity_map(
+                    path, 
+                    sig(pred_mask[0]).detach().cpu().numpy(), 
+                    [ground_truth_boxes[0].cpu().numpy().tolist()]
+                )
+                wandb.log({"train/images": wandb.Image(fig)})
                 
         
         # Validation
@@ -157,18 +150,6 @@ def train(config):
         if config['log_to_wandb']:
             # Log
             wandb.log({"train/dice": train_dice, "val/dice": val_dice})
-            
-            # # Save image encoder
-            # torch.save(model.image_inference_engine.state_dict(), f'./ckpts/{config["architecture"]}_image_{epoch}.pth')
-            # artifact_img = wandb.Artifact(f'image_checkpoints_{run.name}', type='model')
-            # artifact_img.add_file(f'./ckpts/{config["architecture"]}_image_{epoch}.pth', name=f'{config["architecture"]}_image_{epoch}.pth')
-            # wandb.log_artifact(artifact_img)
-            
-            # # Save text encoder
-            # torch.save(model.text_inference_engine.model.state_dict(), f'./ckpts/{config["architecture"]}_text_{epoch}.pth')
-            # artifact_txt = wandb.Artifact(f'text_checkpoints_{run.name}', type='model')
-            # artifact_txt.add_file(f'./ckpts/{config["architecture"]}_text_{epoch}.pth', name=f'{config["architecture"]}_text_{epoch}.pth')
-            # wandb.log_artifact(artifact_txt)
 
             # Save box/segmentation head
             torch.save(model.box_head.state_dict(), f'./ckpts/{config["architecture"]}_box_head_{epoch}.pth')

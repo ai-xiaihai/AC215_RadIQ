@@ -1,11 +1,12 @@
-log_to_wandb: false
+log_to_wandb: true
 sweep: false
 lr: 0.001
-batch_size: 8
-epochs: 20
+batch_size: 16
+epochs: 10
 architecture: biovil
 threshold: 0.0
 resize: 512
+ratio: 12 # importance ratio of positive to negative samples
 
 # set to "" if you don't want to load a checkpoint
 # "./ckpts/bioviL_image_4.pth"
