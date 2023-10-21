@@ -48,6 +48,7 @@ def train(config):
         if config['sweep']:
             run.config.learning_rate = wandb.config['lr']
             run.config.batch_size = wandb.config['batch_size']
+            run.config.ratio = wandb.config['ratio']
             
         else:
             run.config.learning_rate = config['lr']
