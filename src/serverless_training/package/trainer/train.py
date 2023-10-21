@@ -50,7 +50,10 @@ def run_experiment(config):
 def train(config):
     # Intialize wandb
     if config['log_to_wandb']:
-        run = wandb.init(project="AC215-RadIQ")
+        wandb.login(key="6ac94bce286531b3989581a1c8c85cb014a32883")
+        run = wandb.init(
+            project="AC215-RadIQ"
+        )
         run.config.epochs = config['epochs']
         run.config.architecture = config["architecture"]
 
