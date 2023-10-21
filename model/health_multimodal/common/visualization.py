@@ -123,6 +123,7 @@ def plot_phrase_grounding_similarity_map(
     _plot_heatmap(image, similarity_map, figure=fig, axis=axes[2], title="Similarity heatmap")
     if bboxes is not None:
         _plot_bounding_boxes(ax=axes[1], bboxes=bboxes)
+        _plot_bounding_boxes(ax=axes[2], bboxes=bboxes)
     return fig
 
 
