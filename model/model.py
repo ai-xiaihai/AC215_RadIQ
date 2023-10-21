@@ -25,10 +25,40 @@ class ImageTextModel(nn.Module):
         self.text_inference_engine = text_inference_engine
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.box_head = nn.Sequential(
-            nn.Linear(14 * 14 + 4, 50),
-            nn.ReLU(),
-            nn.Linear(50, 4),
+            # Layer 1
+            nn.ConvTranspose2d(1, 64, kernel_size=4, stride=2, padding=1),
+            nn.LayerNorm([64, 28, 28]),
+            nn.ReLU(inplace=True),
+
+            # Layer 2
+            nn.ConvTranspose2d(64, 32, kernel_size=4, stride=2, padding=1),
+            nn.LayerNorm([32, 56, 56]),
+            nn.ReLU(inplace=True),
+
+            # Layer 3
+            nn.ConvTranspose2d(32, 16, kernel_size=4, stride=2, padding=1),
+            nn.LayerNorm([16, 112, 112]),
+            nn.ReLU(inplace=True),
+
+            # Layer 4
+            nn.ConvTranspose2d(16, 8, kernel_size=4, stride=2, padding=1),
+            nn.LayerNorm([8, 224, 224]),
+            nn.ReLU(inplace=True),
+
+            # Layer 5
+            nn.ConvTranspose2d(8, 4, kernel_size=4, stride=2, padding=1),
+            nn.LayerNorm([4, 448, 448]),
+            nn.ReLU(inplace=True),
+
+            # Layer 6
+            nn.ConvTranspose2d(4, 2, kernel_size=4, stride=2, padding=1),
+            nn.LayerNorm([2, 896, 896]),
+            nn.ReLU(inplace=True),
+
+            # Final Conv to ensure correct dimensions
+            nn.Conv2d(2, 1, kernel_size=3, stride=1, padding=1)
         ).to(device)
+
         self.width = width
         self.height = height
         self.resize_size, self.crop_size = (
@@ -100,30 +130,23 @@ class ImageTextModel(nn.Module):
             sim = self._get_similarity_maps_from_embeddings(image_embedding, text_embedding)
 
         # Convert similarity map to bounding box
-        bbox = self.convert_similarity_to_bbox(
-            sim,
-            width=self.width,
-            height=self.height,
-            resize_size=self.resize_size,
-            crop_size=self.crop_size,
-        )
+        bbox = self.convert_similarity_to_bbox(sim)
         return bbox
     
 
-    def convert_similarity_to_bbox(
-        self, similarity_map: torch.Tensor, width: int, height: int, resize_size: Optional[int], crop_size: Optional[int]
-    ):
+    def convert_similarity_to_bbox(self, similarity_map: torch.Tensor):
         # Flatten similarity map        
         B = similarity_map.shape[0]
-        x = similarity_map.view(B, -1)
-        
-        # Add metadata
-        metadata = torch.Tensor([width, height, resize_size, crop_size]).float().to(x.device)
-        metadata = metadata.unsqueeze(0).expand(B, -1)
-        x = torch.cat([x, metadata], dim=1)
+        x = similarity_map.unsqueeze(1)
 
         # Run object detection head
         x = self.box_head(x)
+
+        # Pad due to center crop
+        margins_for_pad = (64,64,64,64)
+
+        # Pad with zeros for differentiability instead of NaNs
+        x = F.pad(x[:, 0, :], margins_for_pad, value=0.0)
         return x
 
 

@@ -114,7 +114,8 @@ class MSCXR(Dataset):
         data = {
             "image": transformed_image,
             "text": text_prompt,
-            "ground_truth_boxes": ground_truth_boxes
+            "ground_truth_boxes": ground_truth_boxes,
+            "dicom_id": f"{row.dicom_id}.jpg",
         }
         return data
 

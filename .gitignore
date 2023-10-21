@@ -138,6 +138,9 @@ dmypy.json
 # checkpoint folder
 **/ckpts/*
 
+# example image folder
+**/example_images/*
+
 # data folder
 /radiq-app-data/train/*
 /radiq-app-data/val/*

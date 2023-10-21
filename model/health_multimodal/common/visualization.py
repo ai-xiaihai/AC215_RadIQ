@@ -64,7 +64,7 @@ def _plot_isolines(
     contours = axis.contour(
         heatmap,
         cmap=colormap,
-        vmin=-1,
+        vmin=0,
         vmax=1,
         levels=levels,
     )
@@ -94,7 +94,7 @@ def _plot_heatmap(
     :param alpha: Heatmap opacity. Must be in :math:`[0, 1]`.
     """
     axis.imshow(image)
-    axes_image = axis.matshow(heatmap, alpha=alpha, cmap=colormap, vmin=-1, vmax=1)
+    axes_image = axis.matshow(heatmap, alpha=alpha, cmap=colormap, vmin=0, vmax=1)
     # https://www.geeksforgeeks.org/how-to-change-matplotlib-color-bar-size-in-python/
     divider = make_axes_locatable(axis)
     colorbar_axes = divider.append_axes("right", size="10%", pad=0.1)
