@@ -60,7 +60,7 @@ class ExpandChannels:
         return torch.repeat_interleave(data, 3, dim=0)
 
 
-def create_chest_xray_transform_for_inference(resize: int = 512) -> Compose:
+def create_chest_xray_transform_for_inference(resize: int = 512, center_crop_size: int = 448) -> Compose:
     """
     Defines the image transformation pipeline for Chest-Xray datasets.
 
@@ -69,12 +69,12 @@ def create_chest_xray_transform_for_inference(resize: int = 512) -> Compose:
     :param center_crop_size: The size to center crop the image to. Square crop is applied.
     """
 
-    transforms = [Resize(resize), ToTensor(), ExpandChannels()]
+    transforms = [Resize(resize), CenterCrop(center_crop_size), ToTensor(), ExpandChannels()]
     return Compose(transforms)
 
 
 class MSCXR(Dataset):
-    def __init__(self, bucket_name, label_file, split, device, resize, transform):
+    def __init__(self, bucket_name, label_file, split, device, transform):
         # Set up GCS bucket
         self.bucket = storage.Client().bucket(bucket_name)
         self.prefix = os.path.join("ms_cxr", split)
@@ -85,7 +85,6 @@ class MSCXR(Dataset):
         df = pd.read_csv(BytesIO(data.encode()))
         self.dataframe = df[df["split"] == split]
         self.device = device
-        self.resize = resize
         self.transform = transform
 
     def __len__(self):
@@ -96,10 +95,10 @@ class MSCXR(Dataset):
         row = self.dataframe.iloc[idx]
         text_prompt = row.label_text
         ground_truth_boxes = torch.tensor([
-            row.x * self.resize / row.image_width, 
-            row.y * self.resize / row.image_height, 
-            row.w * self.resize / row.image_width, 
-            row.h * self.resize / row.image_height
+            row.x,
+            row.y, 
+            row.w,
+            row.h,
         ])
 
         # Get image
@@ -115,7 +114,8 @@ class MSCXR(Dataset):
         data = {
             "image": transformed_image,
             "text": text_prompt,
-            "ground_truth_boxes": ground_truth_boxes
+            "ground_truth_boxes": ground_truth_boxes,
+            "dicom_id": f"{row.dicom_id}.jpg",
         }
         return data
 
@@ -147,14 +147,13 @@ class MSCXR(Dataset):
         return fig
     
 
-def get_mscxr_dataloader(split, batch_size, resize, device):
+def get_mscxr_dataloader(split, batch_size, device):
     dataset = MSCXR(
         bucket_name="radiq-app-data",
         label_file="ms_cxr/label_1024_split.csv",
         split=split,
         device=device,
-        resize=resize,
-        transform=create_chest_xray_transform_for_inference(resize=resize),
+        transform=create_chest_xray_transform_for_inference(),
     )
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
     return dataloader
@@ -173,7 +172,7 @@ class UnitTest:
             split="train",
             device=self.device,
             resize=resize,
-            transform=create_chest_xray_transform_for_inference(resize=resize),
+            transform=create_chest_xray_transform_for_inference(),
         )
         # for i, data in enumerate(tqdm(dataset)):
         #     # print(data)
@@ -184,9 +183,8 @@ class UnitTest:
     def test_dataloader(self):
         split = "train"
         batch_size = 16
-        resize = 512
         device = self.device
-        dataloader = get_mscxr_dataloader(split, batch_size, resize, device)
+        dataloader = get_mscxr_dataloader(split, batch_size, device)
         for batch_idx, data in enumerate(tqdm(dataloader)):
             # print(data)
             pass 

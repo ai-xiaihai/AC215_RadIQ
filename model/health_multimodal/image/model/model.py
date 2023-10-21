@@ -98,7 +98,7 @@ class ImageModel(BaseImageModel):
         downstream_classifier_kwargs = kwargs if kwargs else self.downstream_classifier_kwargs
         return MultiTaskModel(self.feature_size, **downstream_classifier_kwargs)
 
-    @torch.no_grad()
+    # @torch.no_grad()
     def get_patchwise_projected_embeddings(self, input_img: torch.Tensor, normalize: bool) -> torch.Tensor:
         """Get patch-wise projected embeddings from the CNN model.
 
@@ -106,7 +106,7 @@ class ImageModel(BaseImageModel):
         :param normalize: If ``True``, the embeddings are L2-normalized.
         :returns projected_embeddings: tensor of embeddings in shape [batch, n_patches_h, n_patches_w, feature_size].
         """
-        assert not self.training, "This function is only implemented for evaluation mode"
+        # assert not self.training, "This function is only implemented for evaluation mode"
         outputs = self.forward(input_img)
         projected_embeddings = outputs.projected_patch_embeddings.detach()  # type: ignore
         if normalize:

@@ -9,6 +9,8 @@ from health_multimodal.image import ImageInferenceEngine
 from typing import Callable, List, Optional
 from math import ceil, floor
 
+import pdb
+
 
 class ImageTextModel(nn.Module):
     def __init__(
@@ -21,6 +23,42 @@ class ImageTextModel(nn.Module):
         super(ImageTextModel, self).__init__()
         self.image_inference_engine = image_inference_engine.model
         self.text_inference_engine = text_inference_engine
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.box_head = nn.Sequential(
+            # Layer 1
+            nn.ConvTranspose2d(1, 64, kernel_size=4, stride=2, padding=1),
+            nn.LayerNorm([64, 28, 28]),
+            nn.ReLU(inplace=True),
+
+            # Layer 2
+            nn.ConvTranspose2d(64, 32, kernel_size=4, stride=2, padding=1),
+            nn.LayerNorm([32, 56, 56]),
+            nn.ReLU(inplace=True),
+
+            # Layer 3
+            nn.ConvTranspose2d(32, 16, kernel_size=4, stride=2, padding=1),
+            nn.LayerNorm([16, 112, 112]),
+            nn.ReLU(inplace=True),
+
+            # Layer 4
+            nn.ConvTranspose2d(16, 8, kernel_size=4, stride=2, padding=1),
+            nn.LayerNorm([8, 224, 224]),
+            nn.ReLU(inplace=True),
+
+            # Layer 5
+            nn.ConvTranspose2d(8, 4, kernel_size=4, stride=2, padding=1),
+            nn.LayerNorm([4, 448, 448]),
+            nn.ReLU(inplace=True),
+
+            # Layer 6
+            nn.ConvTranspose2d(4, 2, kernel_size=4, stride=2, padding=1),
+            nn.LayerNorm([2, 896, 896]),
+            nn.ReLU(inplace=True),
+
+            # Final Conv to ensure correct dimensions
+            nn.Conv2d(2, 1, kernel_size=3, stride=1, padding=1)
+        ).to(device)
+
         self.width = width
         self.height = height
         self.resize_size, self.crop_size = (
@@ -54,7 +92,8 @@ class ImageTextModel(nn.Module):
             query_text
         )
         image_embedding = self.image_inference_engine.get_patchwise_projected_embeddings(
-            images, normalize=False
+            # images, normalize=False
+            images, normalize=True
         )
 
         sim = self._get_similarity_maps_from_embeddings(image_embedding, text_embedding)
@@ -69,6 +108,47 @@ class ImageTextModel(nn.Module):
             interpolation=interpolation,
         )
         return resized_sim_maps
+    
+    def get_bbox_from_raw_data(
+        self,
+        images: torch.Tensor,
+        query_text: List[str],
+    ) -> torch.Tensor:
+        """
+        Get the bounding box from image and text pairs.
+        """
+        with torch.no_grad():
+             # Get embedding
+            text_embedding = self.text_inference_engine.get_embeddings_from_prompt(
+                query_text
+            )
+            image_embedding = self.image_inference_engine.get_patchwise_projected_embeddings(
+                images, normalize=True
+            )
+
+            # Generate similarity map
+            sim = self._get_similarity_maps_from_embeddings(image_embedding, text_embedding)
+
+        # Convert similarity map to bounding box
+        bbox = self.convert_similarity_to_bbox(sim)
+        return bbox
+    
+
+    def convert_similarity_to_bbox(self, similarity_map: torch.Tensor):
+        # Flatten similarity map        
+        B = similarity_map.shape[0]
+        x = similarity_map.unsqueeze(1)
+
+        # Run object detection head
+        x = self.box_head(x)
+
+        # Pad due to center crop
+        margins_for_pad = (64,64,64,64)
+
+        # Pad with zeros for differentiability instead of NaNs
+        x = F.pad(x[:, 0, :], margins_for_pad, value=0.0)
+        return x
+
 
     @staticmethod
     def _get_similarity_maps_from_embeddings(
@@ -96,9 +176,9 @@ class ImageTextModel(nn.Module):
         # print(projected_text_embeddings.shape)
         # similarity_map = patch_wise_similarity.reshape(batch_size, n_patches_h, n_patches_w)
         # return similarity_map
-        similarity_map = torch.einsum(
-            "bhwc,bc->bhw", projected_patch_embeddings, projected_text_embeddings
-        )
+        # similarity_map = torch.einsum("bhwc,bc->bhw", projected_patch_embeddings, projected_text_embeddings)
+        cos_sim = torch.nn.CosineSimilarity(dim=-1, eps=1e-6)
+        similarity_map = cos_sim(projected_patch_embeddings, projected_text_embeddings.unsqueeze(1).unsqueeze(2))
         return similarity_map
 
     @staticmethod

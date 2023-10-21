@@ -1,0 +1,14 @@
+method: random
+metric:
+  name: val/iou
+  goal: maximize
+parameters:
+  lr:
+    distribution: log_uniform
+    min: -10
+    max: -4
+  batch_size:
+    values: [16, 32]
+  ratio:
+    values: [12, 13, 14, 15, 16, 17, 18, 19, 20]
+count: 30
