@@ -1,9 +1,10 @@
-log_to_wandb: true
-sweep: true
+log_to_wandb: false
+sweep: false
 lr: 0.001
-batch_size: 32
+batch_size: 8
 epochs: 20
 architecture: biovil
+threshold: 0.0
 resize: 512
 
 # set to "" if you don't want to load a checkpoint

@@ -1,5 +1,7 @@
 import sys
 import os
+from pathlib import Path
+import matplotlib.pyplot as plt
 import pdb
 
 # Add to sys path
@@ -13,6 +15,7 @@ from health_multimodal.text import get_bert_inference
 from health_multimodal.text.utils import BertEncoderType
 from health_multimodal.image import get_image_inference
 from health_multimodal.image.utils import ImageModelType
+from health_multimodal.common.visualization import plot_phrase_grounding_similarity_map
 from model import ImageTextModel
 from dataset_mscxr import get_mscxr_dataloader
 from eval import evaluate, dice, get_iou
@@ -54,7 +57,7 @@ def train(config):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Load dataset
-    train_loader = get_mscxr_dataloader("train", config["batch_size"], device) # TODO
+    train_loader = get_mscxr_dataloader("train", config["batch_size"], device)
     val_loader = get_mscxr_dataloader("val", config['batch_size'], device)
 
     # Load BioViL Model
@@ -75,8 +78,9 @@ def train(config):
         model.text_inference_engine.model.load_state_dict(torch.load(config['txt_ckpt']))
 
     # Define loss function and optimizer
-    criterion = torch.nn.SmoothL1Loss()
-    opt_params = list(model.text_inference_engine.model.parameters()) + list(model.image_inference_engine.parameters()) + list(model.box_head.parameters())
+    criterion = torch.nn.BCELoss()
+    sig = torch.nn.Sigmoid()
+    opt_params = list(model.box_head.parameters())
     optimizer = optim.Adam(opt_params, lr=config['lr'])
 
     # Set training mode
@@ -92,16 +96,40 @@ def train(config):
             images = data["image"].to(device)
             text_prompt = data["text"]
             ground_truth_boxes = data["ground_truth_boxes"].to(device)
+            dicom_id = data["dicom_id"]
 
             # Forward pass
-            pred_boxes = model.get_bbox_from_raw_data(
+            pred_mask = model.get_bbox_from_raw_data(
                 images=images,
                 query_text=text_prompt,
             )
+            pred_mask = sig(pred_mask)
+
+            # Visualize
+            path = Path(f"../../../../radiq-app-data/train/" + dicom_id[0])
+            fig = plot_phrase_grounding_similarity_map(
+                path, 
+                pred_mask[0].detach().cpu().numpy(), 
+                [ground_truth_boxes[0].cpu().numpy().tolist()]
+            )
+            fig.savefig(f"test_{epoch}_{batch_idx}.png")
+
+            # Generate gt masks
+            masks = torch.zeros_like(pred_mask)
+            for i in range(images.shape[0]):
+                row_x, row_y, row_w, row_h = (ground_truth_boxes[i]).detach().int()
+                masks[i][row_y : row_y + row_h, row_x : row_x + row_w] = 1
+
+            # Generate background masks
+            background_masks = torch.ones_like(masks) - masks
+            masks_all = torch.stack([background_masks, masks], dim=1)
+            pred_mask_background = torch.ones_like(pred_mask) - pred_mask
+            pred_mask_all = torch.stack([pred_mask_background, pred_mask], dim=1)
 
             # Calculate loss
-            loss = criterion(pred_boxes, ground_truth_boxes)
-            miou = get_iou(pred_boxes, ground_truth_boxes).mean()
+            bce = criterion(pred_mask_all, masks_all)
+            dice_score = dice(masks, pred_mask > 0.5).mean()
+            loss = bce
 
             # Backprop
             optimizer.zero_grad()
@@ -111,37 +139,42 @@ def train(config):
             # Logging
             if config['log_to_wandb']:
                 wandb.log({
+                    f"train/bce": bce,
+                    f"train/miou": dice_score,
                     f"train/loss": loss,
-                    f"train/miou": miou,
-                    f"train/gt_box": ground_truth_boxes[0].tolist(),
-                    f"train/pred_box": pred_boxes[0].tolist(),
                 })
 
             if batch_idx % 1 == 0:
                 print(
-                    f"Epoch {epoch}/{config['epochs']}, Batch {batch_idx}/{len(train_loader)}, Loss: {loss.item()}, mIoU: {miou.item()}"
+                    f"Epoch {epoch}/{config['epochs']}, Batch {batch_idx}/{len(train_loader)}, Loss: {loss.item()}, dice: {dice_score.item()}"
                 )
                 
         
         # Validation
-        train_iou = evaluate(model, train_loader, device)
-        val_iou = evaluate(model, val_loader, device)
+        train_dice = evaluate(model, train_loader, config["threshold"], device)
+        val_dice = evaluate(model, val_loader, config["threshold"], device)
 
         if config['log_to_wandb']:
             # Log
-            wandb.log({"train/iou": train_iou, "val/iou": val_iou})
+            wandb.log({"train/dice": train_dice, "val/dice": val_dice})
             
-            # Save image encoder
-            torch.save(model.image_inference_engine.state_dict(), f'./ckpts/{config["architecture"]}_image_{epoch}.pth')
-            artifact_img = wandb.Artifact(f'image_checkpoints_{run.name}', type='model')
-            artifact_img.add_file(f'./ckpts/{config["architecture"]}_image_{epoch}.pth', name=f'{config["architecture"]}_image_{epoch}.pth')
-            wandb.log_artifact(artifact_img)
+            # # Save image encoder
+            # torch.save(model.image_inference_engine.state_dict(), f'./ckpts/{config["architecture"]}_image_{epoch}.pth')
+            # artifact_img = wandb.Artifact(f'image_checkpoints_{run.name}', type='model')
+            # artifact_img.add_file(f'./ckpts/{config["architecture"]}_image_{epoch}.pth', name=f'{config["architecture"]}_image_{epoch}.pth')
+            # wandb.log_artifact(artifact_img)
             
-            # Save text encoder
-            torch.save(model.text_inference_engine.model.state_dict(), f'./ckpts/{config["architecture"]}_text_{epoch}.pth')
-            artifact_txt = wandb.Artifact(f'text_checkpoints_{run.name}', type='model')
-            artifact_txt.add_file(f'./ckpts/{config["architecture"]}_text_{epoch}.pth', name=f'{config["architecture"]}_text_{epoch}.pth')
-            wandb.log_artifact(artifact_txt)
+            # # Save text encoder
+            # torch.save(model.text_inference_engine.model.state_dict(), f'./ckpts/{config["architecture"]}_text_{epoch}.pth')
+            # artifact_txt = wandb.Artifact(f'text_checkpoints_{run.name}', type='model')
+            # artifact_txt.add_file(f'./ckpts/{config["architecture"]}_text_{epoch}.pth', name=f'{config["architecture"]}_text_{epoch}.pth')
+            # wandb.log_artifact(artifact_txt)
+
+            # Save box/segmentation head
+            torch.save(model.box_head.state_dict(), f'./ckpts/{config["architecture"]}_box_head_{epoch}.pth')
+            artifact_box = wandb.Artifact(f'box_head_checkpoints_{run.name}', type='model')
+            artifact_box.add_file(f'./ckpts/{config["architecture"]}_box_head_{epoch}.pth', name=f'{config["architecture"]}_box_head_{epoch}.pth')
+            wandb.log_artifact(artifact_box)
 
     # Finish wandb session
     wandb.finish()

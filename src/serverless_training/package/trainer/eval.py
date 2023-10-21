@@ -66,7 +66,7 @@ def dice(pred_mask, gt_mask, epsilon=1e-6):
     return dice
 
 
-def evaluate(model: nn.Module, loader: torch.utils.data.DataLoader, device):
+def evaluate(model: nn.Module, loader: torch.utils.data.DataLoader, threshold=0.0, device="cuda"):
     """
     Evaluates the model on the given loader and calculates the Dice score.
 
@@ -77,34 +77,68 @@ def evaluate(model: nn.Module, loader: torch.utils.data.DataLoader, device):
     Returns:
     average_dice -- Average Dice score over all samples in the evaluation dataset
     """
-    tot_sample, tot_iou = 0, 0
+    # tot_sample, tot_iou = 0, 0
+
+    # with torch.no_grad():
+    #     for batch_idx, data in enumerate(loader):
+    #         # Unpack data
+    #         images = data["image"].to(device)
+    #         text_prompt = data["text"]
+    #         ground_truth_boxes = data["ground_truth_boxes"].to(device)
+
+    #         # Forward pass
+    #         pred_boxes = model.get_bbox_from_raw_data(
+    #             images=images,
+    #             query_text=text_prompt,
+    #         )
+
+    #         # Calculate loss
+    #         ious = get_iou(pred_boxes, ground_truth_boxes)
+
+    #         # Calculate iou score for each sample in the batch
+    #         tot_iou += ious.sum().item()
+    #         tot_sample += ious.size(0)
+
+    #         if batch_idx % 5 == 0:
+    #             print(
+    #                 f"[Evaluation] Batch {batch_idx}/{len(loader)}, val_dice: {tot_iou/tot_sample}"
+    #             )
+
+    #     average_dice = tot_iou/tot_sample
 
     with torch.no_grad():
+        tot_sample, tot_dice = 0, 0
         for batch_idx, data in enumerate(loader):
             # Unpack data
             images = data["image"].to(device)
             text_prompt = data["text"]
             ground_truth_boxes = data["ground_truth_boxes"].to(device)
 
-            # Forward pass
-            pred_boxes = model.get_bbox_from_raw_data(
+            similarity_map = model.get_bbox_from_raw_data(
                 images=images,
-                query_text=text_prompt,
+                query_text=text_prompt
             )
 
-            # Calculate loss
-            ious = get_iou(pred_boxes, ground_truth_boxes)
+            # Convert similarity map to a binary mask
+            pred_masks = (similarity_map > threshold).float()
 
-            # Calculate iou score for each sample in the batch
-            tot_iou += ious.sum().item()
-            tot_sample += ious.size(0)
+            # Convert bounding box to a binary mask with same size as similarity map
+            masks = torch.zeros_like(similarity_map)
+            for i in range(images.shape[0]):
+                row_x, row_y, row_w, row_h = (ground_truth_boxes[i]).detach().int()
+                masks[i][row_y : row_y + row_h, row_x : row_x + row_w] = 1
+
+            # Calculate Dice score for each sample in the batch
+            cur_dice = dice(pred_masks, masks)
+            tot_dice += cur_dice.sum().item()
+            tot_sample += cur_dice.size(0)
 
             if batch_idx % 5 == 0:
                 print(
-                    f"[Evaluation] Batch {batch_idx}/{len(loader)}, val_dice: {tot_iou/tot_sample}"
+                    f"[Evaluation] Batch {batch_idx}/{len(loader)}, val_dice: {tot_dice/tot_sample}"
                 )
 
-        average_dice = tot_iou/tot_sample
+        average_dice = tot_dice/tot_sample
 
     return average_dice
 
