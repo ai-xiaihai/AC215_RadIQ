@@ -14,21 +14,33 @@ from health_multimodal.text import get_bert_inference
 from health_multimodal.text.utils import BertEncoderType
 from health_multimodal.image import get_image_inference
 from health_multimodal.image.utils import ImageModelType
-from model import ImageTextModel
-from dataset_mscxr import get_mscxr_dataloader
-from eval import evaluate
+from trainer.model import ImageTextModel
+from trainer.dataset_mscxr import get_mscxr_dataloader
+from trainer.eval import evaluate
 
     
-def run_experiment(config_path):
-    # Load configuartions
-    with open(config_path, "r") as f:
-        config = yaml.safe_load(f)
-
+def run_experiment(config):
     # If sweep is true, perform a sweep
     if config["sweep"]:
-        with open("sweep_config.yaml", 'r') as file:
-            sweep_configuration = yaml.safe_load(file)
-    
+        sweep_configuration = {
+            "method": "random",
+            "metric": {
+                "name": "val/acc",
+                "goal": "maximize"
+            },
+            "parameters": {
+                "lr": {
+                    "distribution": "log_uniform",
+                    "min": -11,
+                    "max": -6
+                },
+                "batch_size": {
+                    "values": [16, 32]
+                }
+            },
+            "count": 20
+        }
+
         sweep_id = wandb.sweep(sweep=sweep_configuration, project='AC215-RadIQ')
         wandb.agent(sweep_id, function=lambda:train(config), count=sweep_configuration["count"]) 
     else:
@@ -38,7 +50,10 @@ def run_experiment(config_path):
 def train(config):
     # Intialize wandb
     if config['log_to_wandb']:
-        run = wandb.init(project="AC215-RadIQ")
+        wandb.login(key="6ac94bce286531b3989581a1c8c85cb014a32883")
+        run = wandb.init(
+            project="AC215-RadIQ"
+        )
         run.config.epochs = config['epochs']
         run.config.architecture = config["architecture"]
 
@@ -141,4 +156,16 @@ def train(config):
 
 
 if __name__ == "__main__":
-    run_experiment("config.yaml")
+    config = {
+        "log_to_wandb": True,
+        "sweep": False,
+        "lr": 0.0001,
+        "batch_size": 16,
+        "epochs": 5,
+        "architecture": "biovil",
+        "resize": 512,
+        "threshold": 0.2,
+        "img_ckpt": "",
+        "txt_ckpt": ""
+    }
+    run_experiment(config)

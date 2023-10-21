@@ -20,7 +20,7 @@ docker build -t $IMAGE_NAME --platform=linux/arm64/v8 -f Dockerfile .
 docker run --rm --name $IMAGE_NAME -ti \
 -v "$BASE_DIR":/app \
 -v "$SECRETS_DIR":/secrets \
--v "$MODEL_DIR/health_multimodal":/app/package/trainer/health_multimodal \
+-v "$MODEL_DIR/health_multimodal":/app/package/health_multimodal \
 -v "$MODEL_DIR/model.py":/app/package/trainer/model.py \
 -v "$MODEL_DIR/dataset_mscxr.py":/app/package/trainer/dataset_mscxr.py \
 -e GOOGLE_APPLICATION_CREDENTIALS=/secrets/model-trainer.json \
