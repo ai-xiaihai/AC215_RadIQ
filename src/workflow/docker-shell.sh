@@ -7,7 +7,7 @@ export BASE_DIR=$(pwd)
 export SECRETS_DIR=$(pwd)/../../secrets/
 export GCP_PROJECT="ac215-radiq"
 export GCS_BUCKET_NAME="x-ray-app-ml-workflow-demo"
-export GCS_SERVICE_ACCOUNT="radiq-app-data@ac215-radiq.iam.gserviceaccount.com"
+export GCS_SERVICE_ACCOUNT="ml-workflow@ac215-radiq.iam.gserviceaccount.com"
 export GCP_REGION="us-central1"
 export GCS_PACKAGE_URI="gs://x-ray-app-trainer-code"
 
