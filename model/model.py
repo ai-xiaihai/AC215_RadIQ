@@ -117,17 +117,17 @@ class ImageTextModel(nn.Module):
         """
         Get the bounding box from image and text pairs.
         """
-        with torch.no_grad():
-             # Get embedding
-            text_embedding = self.text_inference_engine.get_embeddings_from_prompt(
-                query_text
-            )
-            image_embedding = self.image_inference_engine.get_patchwise_projected_embeddings(
-                images, normalize=True
-            )
+        # with torch.no_grad():
+        # Get embedding
+        text_embedding = self.text_inference_engine.get_embeddings_from_prompt(
+            query_text
+        )
+        image_embedding = self.image_inference_engine.get_patchwise_projected_embeddings(
+            images, normalize=True
+        )
 
-            # Generate similarity map
-            sim = self._get_similarity_maps_from_embeddings(image_embedding, text_embedding)
+        # Generate similarity map
+        sim = self._get_similarity_maps_from_embeddings(image_embedding, text_embedding)
 
         # Convert similarity map to bounding box
         bbox = self.convert_similarity_to_bbox(sim)

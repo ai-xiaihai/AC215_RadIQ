@@ -76,6 +76,8 @@ def train(config):
         model.image_inference_engine.load_state_dict(torch.load(config['img_ckpt']))
     if config['txt_ckpt']:
         model.text_inference_engine.model.load_state_dict(torch.load(config['txt_ckpt']))
+    if config['box_ckpt']:
+        model.box_head.load_state_dict(torch.load(config['box_ckpt']))
 
     # Define loss function and optimizer
     opt_params = list(model.box_head.parameters())
@@ -134,13 +136,13 @@ def train(config):
                     f"Epoch {epoch}/{config['epochs']}, Batch {batch_idx}/{len(train_loader)}, Loss: {loss.item()}, dice: {dice_score.item()}"
                 )
             
-            if batch_idx % 10 == 0:
+            if config["log_to_wandb"] and batch_idx % 10 == 0:
                 # Visualize
                 path = Path(f"../../../../radiq-app-data/train/" + dicom_id[0])
                 fig = plot_phrase_grounding_similarity_map(
-                    path, 
-                    sig(pred_mask[0]).detach().cpu().numpy(), 
-                    [ground_truth_boxes[0].cpu().numpy().tolist()]
+                    image_path = path, 
+                    similarity_map = sig(pred_mask[0]).detach().cpu().numpy(), 
+                    bboxes = [ground_truth_boxes[0].cpu().numpy().tolist()]
                 )
                 wandb.log({"train/images": wandb.Image(fig)})
                 

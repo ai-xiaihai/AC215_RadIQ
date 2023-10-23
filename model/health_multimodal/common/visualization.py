@@ -108,7 +108,7 @@ def _plot_heatmap(
 
 
 def plot_phrase_grounding_similarity_map(
-    image_path: Path, similarity_map: np.ndarray, text_prompt: str,  dice_score: float, bboxes: Optional[List[Tuple[float, float, float, float]]] = None
+    image_path: Path, similarity_map: np.ndarray, text_prompt: str = "NONE",  dice_score: float = -1.0, bboxes: Optional[List[Tuple[float, float, float, float]]] = None
 ) -> plt.Figure:
     """Plot visualization of the input image, the similarity heatmap and the heatmap isolines.
 
