@@ -1,6 +1,9 @@
 import sys
 import os
 import pdb
+import wandb
+import matplotlib.pyplot as plt
+from pathlib import Path
 
 # Add to sys path
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../../..", "model"))
@@ -13,6 +16,7 @@ from health_multimodal.text import get_bert_inference
 from health_multimodal.text.utils import BertEncoderType
 from health_multimodal.image import get_image_inference
 from health_multimodal.image.utils import ImageModelType
+from health_multimodal.common.visualization import plot_phrase_grounding_similarity_map
 from model import ImageTextModel
 from dataset_mscxr import get_mscxr_dataloader
 
@@ -66,45 +70,18 @@ def dice(pred_mask, gt_mask, epsilon=1e-6):
     return dice
 
 
-def evaluate(model: nn.Module, loader: torch.utils.data.DataLoader, threshold=0.0, device="cuda"):
+def evaluate(model: nn.Module, loader: torch.utils.data.DataLoader, threshold=0.0, device="cuda", visualize=False):
     """
-    Evaluates the model on the given loader and calculates the Dice score.
-
     Parameters:
-    model -- PyTorch model to be evaluated
-    loader -- DataLoader for the evaluation dataset
+    model (nn.Module): The PyTorch model to be evaluated.
+    loader (torch.utils.data.DataLoader): DataLoader for the evaluation dataset.
+    threshold (float, optional): Threshold for converting similarity maps to binary masks. Defaults to 0.0.
+    device (str, optional): The device on which the model and data are placed. Defaults to "cuda".
+    visualize (bool, optional): Whether to generate visualizations of grounding effects. Defaults to False.
 
     Returns:
-    average_dice -- Average Dice score over all samples in the evaluation dataset
+    average_dice (float) -- Average Dice score over all samples in the evaluation dataset
     """
-    # tot_sample, tot_iou = 0, 0
-
-    # with torch.no_grad():
-    #     for batch_idx, data in enumerate(loader):
-    #         # Unpack data
-    #         images = data["image"].to(device)
-    #         text_prompt = data["text"]
-    #         ground_truth_boxes = data["ground_truth_boxes"].to(device)
-
-    #         # Forward pass
-    #         pred_boxes = model.get_bbox_from_raw_data(
-    #             images=images,
-    #             query_text=text_prompt,
-    #         )
-
-    #         # Calculate loss
-    #         ious = get_iou(pred_boxes, ground_truth_boxes)
-
-    #         # Calculate iou score for each sample in the batch
-    #         tot_iou += ious.sum().item()
-    #         tot_sample += ious.size(0)
-
-    #         if batch_idx % 5 == 0:
-    #             print(
-    #                 f"[Evaluation] Batch {batch_idx}/{len(loader)}, val_dice: {tot_iou/tot_sample}"
-    #             )
-
-    #     average_dice = tot_iou/tot_sample
 
     with torch.no_grad():
         tot_sample, tot_dice = 0, 0
@@ -113,6 +90,7 @@ def evaluate(model: nn.Module, loader: torch.utils.data.DataLoader, threshold=0.
             images = data["image"].to(device)
             text_prompt = data["text"]
             ground_truth_boxes = data["ground_truth_boxes"].to(device)
+            dicom_id = data["dicom_id"]
 
             similarity_map = model.get_bbox_from_raw_data(
                 images=images,
@@ -138,6 +116,23 @@ def evaluate(model: nn.Module, loader: torch.utils.data.DataLoader, threshold=0.
                     f"[Evaluation] Batch {batch_idx}/{len(loader)}, val_dice: {tot_dice/tot_sample}"
                 )
 
+            if visualize:
+                path = Path(f"../../../../radiq-app-data/ms_cxr/val/" + dicom_id[0])
+                fig = plot_phrase_grounding_similarity_map(
+                    path, 
+                    torch.sigmoid(similarity_map[0]).detach().cpu().numpy(), 
+                    text_prompt[0],
+                    cur_dice[0].item(),
+                    [ground_truth_boxes[0].detach().cpu().numpy().tolist()]
+                )
+
+                save_directory = "../../../../radiq-app-data/visualize"
+                if not os.path.exists(save_directory):
+                    os.makedirs(save_directory)
+                plt.savefig(f"{save_directory}/{dicom_id[0]}")
+                
+                plt.close()
+
         average_dice = tot_dice/tot_sample
 
     return average_dice
@@ -148,9 +143,9 @@ class UnitTest:
     def __init__(self):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    def test_eval(self):    
+    def test_eval(self, visualize=False):    
         # Load dataset
-        batch_size = 32
+        batch_size = 16
         val_loader = get_mscxr_dataloader("val", batch_size, self.device)
 
         # Load BioViL Model
@@ -163,8 +158,28 @@ class UnitTest:
             height=1024,
         )
         model.to(self.device)
-        val_dice = evaluate(model, val_loader, self.device)
-        print("Test Evaluation: SUCCESS! Validation iou: ", val_dice)
+
+        if visualize:
+            # load best archecture from WandB
+            wandb.login()
+            run = wandb.init(project='AC215-RadIQ')
+
+            best_sweep = 'likely-sweep-4'
+            best_epoch = 3 # 0-index
+            artifact_name = f'ac215-radiq/AC215-RadIQ/box_head_checkpoints_{best_sweep}:v{best_epoch}' 
+            artifact = run.use_artifact(artifact_name)
+            artifact_dir = artifact.download()
+
+            box_head_state_dict = torch.load(f"{artifact_dir}/biovil_box_head_{best_epoch + 1}.pth", map_location=self.device)
+            model.box_head.load_state_dict(box_head_state_dict)
+
+            val_dice = evaluate(model, val_loader, device=self.device, visualize=True)
+        else:
+            val_dice = evaluate(model, val_loader, device=self.device, visualize=False)
+
+        val_dice = evaluate(model, val_loader, device=self.device)
+        print("Test Evaluation: SUCCESS! Validation dice: ", val_dice)
+
 
     def test_miou(self):
         pred_boxes = torch.tensor([[50, 50, 100, 100], [30, 30, 90, 90]]).to(self.device)
@@ -172,7 +187,8 @@ class UnitTest:
         print(get_iou(pred_boxes, gt_boxes))
     
 
+
 if __name__ == "__main__":
     test = UnitTest()
-    test.test_miou()
-    test.test_eval()
+    # test.test_miou()
+    test.test_eval(visualize=True)
