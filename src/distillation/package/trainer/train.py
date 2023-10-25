@@ -159,7 +159,7 @@ def train(config):
                 path = Path(f"../../../../radiq-app-data/train/" + dicom_id[0])
                 fig = plot_phrase_grounding_similarity_map(
                     path, 
-                    sig(pred_mask[0]).detach().cpu().numpy(), 
+                    sig(pred_mask_student[0]).detach().cpu().numpy(), 
                     [ground_truth_boxes[0].cpu().numpy().tolist()]
                 )
 
