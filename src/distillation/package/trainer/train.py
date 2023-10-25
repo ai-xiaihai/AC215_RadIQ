@@ -99,7 +99,7 @@ def train(config):
     # Set training mode
     model.text_inference_engine.model.eval()
     model.image_inference_engine.eval()
-    model.box_head.train()
+    model.box_head.eval()
     model_student.text_inference_engine.model.eval()
     model_student.image_inference_engine.train()
     model_student.box_head.train()

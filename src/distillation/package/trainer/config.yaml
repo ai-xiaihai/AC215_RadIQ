@@ -1,4 +1,4 @@
-log_to_wandb: false
+log_to_wandb: true
 sweep: false
 lr: 0.001
 batch_size: 16
