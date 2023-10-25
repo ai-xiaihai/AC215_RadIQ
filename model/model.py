@@ -1,4 +1,4 @@
-
+import time
 from typing import List
 
 import torch
@@ -19,6 +19,8 @@ class ImageTextModel(nn.Module):
         text_inference_engine: TextInferenceEngine,
         width,
         height,
+        print_inference_time=True,
+        train_image=False
     ) -> None:
         super(ImageTextModel, self).__init__()
         self.image_inference_engine = image_inference_engine.model
@@ -66,6 +68,8 @@ class ImageTextModel(nn.Module):
             image_inference_engine.crop_size,
         )
         self.transform = image_inference_engine.transform
+        self.print_time = print_inference_time
+        self.train_image = train_image
 
     def get_similarity_maps_from_raw_data(
         self,
@@ -117,14 +121,20 @@ class ImageTextModel(nn.Module):
         """
         Get the bounding box from image and text pairs.
         """
+        time1 = time.time()
         with torch.no_grad():
              # Get embedding
             text_embedding = self.text_inference_engine.get_embeddings_from_prompt(
                 query_text
             )
+        time2 = time.time()
+        with torch.set_grad_enabled(self.train_image):
             image_embedding = self.image_inference_engine.get_patchwise_projected_embeddings(
                 images, normalize=True
             )
+        time3 = time.time()
+        if self.print_time:
+            print("inference time: image", time3 - time2, "text", time2 - time1)
 
             # Generate similarity map
             sim = self._get_similarity_maps_from_embeddings(image_embedding, text_embedding)

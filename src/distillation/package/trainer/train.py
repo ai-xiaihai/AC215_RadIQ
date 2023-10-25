@@ -43,7 +43,7 @@ def train(config):
     if config['log_to_wandb']:
         run = wandb.init(project="AC215-RadIQ")
         run.config.epochs = config['epochs']
-        run.config.architecture = config["architecture"]
+        run.config.architecture = "distillation" + config["architecture"]
 
         if config['sweep']:
             run.config.learning_rate = wandb.config['lr']
@@ -63,6 +63,9 @@ def train(config):
     # Load BioViL Model
     text_inference = get_bert_inference(BertEncoderType.BIOVIL_T_BERT)
     image_inference = get_image_inference(ImageModelType.BIOVIL_T)
+    text_inference_student = get_bert_inference(BertEncoderType.BIOVIL_T_BERT)
+    image_inference_student = get_image_inference(config["architecture"])
+
     model = ImageTextModel(
         image_inference_engine=image_inference,
         text_inference_engine=text_inference,
@@ -70,12 +73,22 @@ def train(config):
         height=1024,
     )
     model.to(device)
+    model_student = ImageTextModel(
+        image_inference_engine=image_inference_student,
+        text_inference_engine=text_inference_student,
+        width=1024,
+        height=1024,
+        train_image=True,
+    )
+    model_student.to(device)
 
     # Load checkpoint if exists
     if config['img_ckpt']:
-        model.image_inference_engine.load_state_dict(torch.load(config['img_ckpt']))
+        model.image_inference_engine.load_state_dict(torch.load(config['img_ckpt'], map_location=device))
     if config['txt_ckpt']:
-        model.text_inference_engine.model.load_state_dict(torch.load(config['txt_ckpt']))
+        model.text_inference_engine.model.load_state_dict(torch.load(config['txt_ckpt'], map_location=device))
+    if config['boxhead_ckpt']:
+        model.box_head.load_state_dict(torch.load(config['boxhead_ckpt'], map_location=device))
 
     # Define loss function and optimizer
     opt_params = list(model.box_head.parameters())
@@ -87,6 +100,9 @@ def train(config):
     model.text_inference_engine.model.eval()
     model.image_inference_engine.eval()
     model.box_head.train()
+    model_student.text_inference_engine.model.eval()
+    model_student.image_inference_engine.train()
+    model_student.box_head.train()
 
     # Train
     for epoch in range(1, config['epochs']+1):
@@ -99,7 +115,12 @@ def train(config):
             dicom_id = data["dicom_id"]
 
             # Forward pass
-            pred_mask = model.get_bbox_from_raw_data(
+            with torch.no_grad():
+                pred_mask = model.get_bbox_from_raw_data(
+                    images=images,
+                    query_text=text_prompt,
+                )
+            pred_mask_student = model_student.get_bbox_from_raw_data(
                 images=images,
                 query_text=text_prompt,
             )
@@ -111,10 +132,10 @@ def train(config):
                 masks[i][row_y : row_y + row_h, row_x : row_x + row_w] = 1
 
             # Calculate loss
-            bce = criterion(pred_mask, masks)
-            bce = (config["ratio"] * masks + 1) * bce
+            bce = criterion(pred_mask_student, pred_mask)
+            bce = (config["ratio"] * pred_mask + 1) * bce
             loss = bce.mean()
-            dice_score = dice(masks, pred_mask > 0.0).mean()
+            dice_score = dice(masks, pred_mask_student > 0.0).mean()
 
             # Backprop
             optimizer.zero_grad()
@@ -147,15 +168,16 @@ def train(config):
                 
         
         # Validation
-        train_dice = evaluate(model, train_loader, config["threshold"], device)
-        val_dice = evaluate(model, val_loader, config["threshold"], device)
+        train_dice = evaluate(model_student, train_loader, config["threshold"], device)
+        val_dice = evaluate(model_student, val_loader, config["threshold"], device)
 
         if config['log_to_wandb']:
             # Log
             wandb.log({"train/dice": train_dice, "val/dice": val_dice, "val/best_dice": wandb.run.summary.get("best_dice", 0)})
 
             # Save box/segmentation head
-            torch.save(model.box_head.state_dict(), f'./ckpts/{config["architecture"]}_box_head_{epoch}.pth')
+            torch.save(model_student.box_head.state_dict(), f'./ckpts/{config["architecture"]}_box_head_{epoch}.pth')
+            torch.save(model_student.image_inference_engine.state_dict(), f'./ckpts/{config["architecture"]}_image_model_{epoch}.pth')
             artifact_box = wandb.Artifact(f'box_head_checkpoints_{run.name}', type='model')
             artifact_box.add_file(f'./ckpts/{config["architecture"]}_box_head_{epoch}.pth', name=f'{config["architecture"]}_box_head_{epoch}.pth')
             wandb.log_artifact(artifact_box)

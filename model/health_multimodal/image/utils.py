@@ -9,6 +9,7 @@ from .data.transforms import create_chest_xray_transform_for_inference
 from .inference_engine import ImageInferenceEngine
 from .model.pretrained import get_biovil_image_encoder
 from .model.pretrained import get_biovil_t_image_encoder
+from .model.pretrained import get_resnet18_image_encoder
 
 TRANSFORM_RESIZE = 512
 
@@ -16,6 +17,7 @@ TRANSFORM_RESIZE = 512
 @unique
 class ImageModelType(str, Enum):
     BIOVIL = "biovil"
+    RESNET18ORIGIN = "resnet18_origin"
     BIOVIL_T = "biovil_t"
 
 
@@ -33,6 +35,9 @@ def get_image_inference(image_model_type: ImageModelType = ImageModelType.BIOVIL
         transform_center_crop_size = 448
     elif image_model_type == ImageModelType.BIOVIL:
         image_model = get_biovil_image_encoder()
+        transform_center_crop_size = 480
+    elif image_model_type == ImageModelType.RESNET18ORIGIN:
+        image_model = get_resnet18_image_encoder()
         transform_center_crop_size = 480
     else:
         raise ValueError(f"Unknown image_model_type: {image_model_type}")
