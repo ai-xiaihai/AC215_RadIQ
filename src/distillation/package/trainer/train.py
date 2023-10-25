@@ -18,6 +18,7 @@ from health_multimodal.common.visualization import plot_phrase_grounding_similar
 from model import ImageTextModel
 from dataset_mscxr import get_mscxr_dataloader
 from eval import evaluate, dice, get_iou
+import matplotlib.pyplot as plt 
 
     
 def run_experiment(config_path):
@@ -93,7 +94,7 @@ def train(config):
     # Define loss function and optimizer
     opt_params = list(model_student.box_head.parameters())+list(model_student.image_inference_engine.parameters())
     optimizer = optim.Adam(opt_params, lr=config['lr'])
-    criterion = torch.nn.KLDivLoss(reduction="none")
+    criterion = torch.nn.MSELoss()
     sig = torch.nn.Sigmoid()
 
     # Set training mode
@@ -132,8 +133,7 @@ def train(config):
                 masks[i][row_y : row_y + row_h, row_x : row_x + row_w] = 1
 
             # Calculate loss
-            loss = criterion(torch.log(sig(pred_mask_student)), sig(pred_mask))
-            loss = loss.mean()
+            loss = criterion(pred_mask_student, pred_mask)
             dice_score = dice(masks, pred_mask_student > 0.0).mean()
 
             # Backprop
@@ -145,7 +145,7 @@ def train(config):
             if config['log_to_wandb']:
                 wandb.log({
                     f"train/miou": dice_score,
-                    f"train/kl_loss": loss,
+                    f"train/mse_loss": loss,
                 })
 
             if batch_idx % 1 == 0:
@@ -170,6 +170,8 @@ def train(config):
 
                     wandb.log({"train/images_student": wandb.Image(fig)})
                     wandb.log({"train/images_teacher": wandb.Image(fig2)})
+                    plt.close(fig)
+                    plt.close(fig2)
                 
         
         # Validation
