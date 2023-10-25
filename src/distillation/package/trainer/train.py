@@ -93,7 +93,7 @@ def train(config):
     # Define loss function and optimizer
     opt_params = list(model.box_head.parameters())
     optimizer = optim.Adam(opt_params, lr=config['lr'])
-    criterion = torch.nn.BCEWithLogitsLoss(reduction="none")
+    criterion = torch.nn.KLDivLoss(reduction="none")
     sig = torch.nn.Sigmoid()
 
     # Set training mode
@@ -132,9 +132,8 @@ def train(config):
                 masks[i][row_y : row_y + row_h, row_x : row_x + row_w] = 1
 
             # Calculate loss
-            bce = criterion(pred_mask_student, pred_mask)
-            bce = (config["ratio"] * pred_mask + 1) * bce
-            loss = bce.mean()
+            loss = criterion(torch.log(sig(pred_mask_student)), sig(pred_mask))
+            loss = loss.mean()
             dice_score = dice(masks, pred_mask_student > 0.0).mean()
 
             # Backprop
@@ -146,7 +145,7 @@ def train(config):
             if config['log_to_wandb']:
                 wandb.log({
                     f"train/miou": dice_score,
-                    f"train/loss": loss,
+                    f"train/kl_loss": loss,
                 })
 
             if batch_idx % 1 == 0:
