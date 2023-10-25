@@ -91,7 +91,7 @@ def train(config):
         model.box_head.load_state_dict(torch.load(config['boxhead_ckpt'], map_location=device))
 
     # Define loss function and optimizer
-    opt_params = list(model.box_head.parameters())
+    opt_params = list(model_student.box_head.parameters())+list(model_student.image_inference_engine.parameters())
     optimizer = optim.Adam(opt_params, lr=config['lr'])
     criterion = torch.nn.KLDivLoss(reduction="none")
     sig = torch.nn.Sigmoid()
@@ -155,15 +155,21 @@ def train(config):
             
             if batch_idx % 5 == 0:
                 # Visualize
-                path = Path(f"../../../../radiq-app-data/train/" + dicom_id[0])
-                fig = plot_phrase_grounding_similarity_map(
-                    path, 
-                    sig(pred_mask_student[0]).detach().cpu().numpy(), 
-                    [ground_truth_boxes[0].cpu().numpy().tolist()]
-                )
-
                 if config['log_to_wandb']:
-                    wandb.log({"train/images": wandb.Image(fig)})
+                    path = Path(f"../../../../radiq-app-data/train/" + dicom_id[0])
+                    fig = plot_phrase_grounding_similarity_map(
+                        path, 
+                        sig(pred_mask_student[0]).detach().cpu().numpy(), 
+                        [ground_truth_boxes[0].cpu().numpy().tolist()]
+                    )
+                    fig2 = plot_phrase_grounding_similarity_map(
+                        path, 
+                        sig(pred_mask[0]).detach().cpu().numpy(), 
+                        [ground_truth_boxes[0].cpu().numpy().tolist()]
+                    )
+
+                    wandb.log({"train/images_student": wandb.Image(fig)})
+                    wandb.log({"train/images_teacher": wandb.Image(fig2)})
                 
         
         # Validation
