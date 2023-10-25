@@ -178,8 +178,9 @@ def train(config):
             # Save box/segmentation head
             torch.save(model_student.box_head.state_dict(), f'./ckpts/{config["architecture"]}_box_head_{epoch}.pth')
             torch.save(model_student.image_inference_engine.state_dict(), f'./ckpts/{config["architecture"]}_image_model_{epoch}.pth')
-            artifact_box = wandb.Artifact(f'box_head_checkpoints_{run.name}', type='model')
+            artifact_box = wandb.Artifact(f'distillation_checkpoints_{run.name}', type='model')
             artifact_box.add_file(f'./ckpts/{config["architecture"]}_box_head_{epoch}.pth', name=f'{config["architecture"]}_box_head_{epoch}.pth')
+            artifact_box.add_file(f'./ckpts/{config["architecture"]}_image_model_{epoch}.pth', name=f'{config["architecture"]}_image_model_{epoch}.pth')
             wandb.log_artifact(artifact_box)
 
     # Finish wandb session
