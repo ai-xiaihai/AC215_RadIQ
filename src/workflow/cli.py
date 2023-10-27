@@ -53,7 +53,7 @@ def main(args=None):
 
         @dsl.pipeline
         def ml_pipeline():
-            # Data Collector
+            # Data Preprocessor
             data_proprocessor_task = data_proprocessor().set_display_name(
                 "Data Proprocessor"
             )
@@ -84,6 +84,90 @@ def main(args=None):
         job = aip.PipelineJob(
             display_name=DISPLAY_NAME,
             template_path="ml_pipeline.yaml",
+            pipeline_root=PIPELINE_ROOT,
+            enable_caching=False,
+        )
+
+        job.run(service_account=GCS_SERVICE_ACCOUNT)
+
+    if args.data_preprocessing:
+        print("Full Preprocess Pipeline")
+
+        # Define a Container Component
+        @dsl.container_component
+        def data_proprocessor():
+            container_spec = dsl.ContainerSpec(
+                image=DATA_PREPROCESSOR_IMAGE,
+                command=[],
+                args=[
+                    "cli.py",
+                    "--all",
+                ],
+            )
+            return container_spec
+
+        @dsl.pipeline
+        def preprocessing_pipeline():
+            # Data Collector
+            data_proprocessor().set_display_name(
+                "Data Proprocessor"
+            )
+
+        # Build yaml file for pipeline
+        compiler.Compiler().compile(
+            preprocessing_pipeline, package_path="data_preprocessing.yaml"
+        )
+
+        # Submit job to Vertex AI
+        aip.init(project=GCP_PROJECT, staging_bucket=BUCKET_URI)
+
+        job_id = generate_uuid()
+        DISPLAY_NAME = "x-ray-app-data-preprocessing-" + job_id
+        job = aip.PipelineJob(
+            display_name=DISPLAY_NAME,
+            template_path="data-preprocessing.yaml",
+            pipeline_root=PIPELINE_ROOT,
+            enable_caching=False,
+        )
+
+        job.run(service_account=GCS_SERVICE_ACCOUNT)
+
+    if args.data_splitting:
+        print("Full Preprocess Pipeline")
+
+        # Define a Container Component
+        @dsl.container_component
+        def data_splitter():
+            container_spec = dsl.ContainerSpec(
+                image=DATA_SPLITTER_IMAGE,
+                command=[],
+                args=[
+                    "cli.py",
+                    "--all",
+                ],
+            )
+            return container_spec
+
+        @dsl.pipeline
+        def splitting_pipeline():
+            # Data Collector
+            data_splitter().set_display_name(
+                "Data Splitter"
+            )
+
+        # Build yaml file for pipeline
+        compiler.Compiler().compile(
+            splitting_pipeline, package_path="data_spliting.yaml"
+        )
+
+        # Submit job to Vertex AI
+        aip.init(project=GCP_PROJECT, staging_bucket=BUCKET_URI)
+
+        job_id = generate_uuid()
+        DISPLAY_NAME = "x-ray-app-data-splitting-" + job_id
+        job = aip.PipelineJob(
+            display_name=DISPLAY_NAME,
+            template_path="data-splitting.yaml",
             pipeline_root=PIPELINE_ROOT,
             enable_caching=False,
         )
@@ -138,6 +222,18 @@ if __name__ == "__main__":
         "--model_workflow",
         action="store_true",
         help="Serverless training",
+    )
+    parser.add_argument(
+        "-p",
+        "--data_preprocessing",
+        action="store_true",
+        help="data Preprocessing",
+    )
+    parser.add_argument(
+        "-s",
+        "--data_splitting",
+        action="store_true",
+        help="Data Splitting",
     )
 
     args = parser.parse_args()
