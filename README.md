@@ -83,7 +83,6 @@ Given the inadequacies in the prior structures, we adopted convolutional layers 
 
 ***Architecture 4: Implementation of Focal Loss***
 
-Justification:
 We hypothesized that the underwhelming performance could be due to class imbalance – a common complication where models struggle to recognize minority classes. To mitigate this, we introduced focal loss, known for addressing class imbalance by giving more weight to harder-to-classify instances.
 
 `> Outcome: The results were promising: we achieved a Dice Score of 0.392, the highest in our series of tests. This score is indicative of a significant improvement in the model's ability to predict box coordinates accurately.
