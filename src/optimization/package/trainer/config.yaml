@@ -12,4 +12,4 @@ ratio: 17 # importance ratio of positive to negative samples
 # "./ckpts/bioviL_image_4.pth"
 img_ckpt: ""
 txt_ckpt: ""
-box_ckpt: "./ckpts/best_box_head.pth"
+box_ckpt: ""

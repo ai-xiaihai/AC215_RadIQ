@@ -54,6 +54,26 @@ This project aims to develop an application that allows patients to better under
 
 ### Milestone 3 ###
 
+**Model Optimization**
+- Encoder vs decoder
+- Loss function
+
+**Model Training**
+- WandB automatic hyperparameter sweep through config.yaml
+- WandB image logging feature to visualize model performance / debugging
+
+**Kubeflow**
+
+**Model Distillation**
+- Since our model has several components, we first identified the bottleneck in inference speed and memory. We found that the image encoder (ResNet50-based) is the bottleneck. The image encoder part of the multimodal model is ~6x slower than the (BERT-based) text encoder during inference. We trained a ResNet18-based student model by model distillation.
+- Following the distillation process in lecture 9 and trained for 5 epochs, the number of parameters decreased by 46%, the inference time decreassed by ~50%; the dice scored decreased by 2%. The final dice score of 0.386 after model distillation, compared to 0.392 in the teacher model.
+- Although we consider the model distillation to be successful with ~50% decrease in number of parameters and inference time, at the cost of only 2% drop in dice, we decided not to use the distilled model in our web application. The reason is that the distilled model is not as accurate as the teacher model. We believe that the accuracy is more important than the inference time in medical application.
+
+![Distillation WandB Screenshot](./images/distillation.png)
+
+
+### Milestone 3 ###
+
 **Data Loading**
 
 In this milestone, we undertook significant refinements to optimize our data pipeline process. 
@@ -99,12 +119,6 @@ To allow serverless training, we adopt Google Cloud's Vertex AI. With this, we c
 ![WandB Screenshot](./images/vertexAI.png)
 
 Furthermore, we have a fully functional docker container as well. This allows us to easily deploy our model on any cloud platform, including AWS, Azure, and GCP. To this date, we have 2 tools behind our belt - a containerized training pipeline to run on compute nodes and Vertex AI.
-
-**Distillation**
-- The current ResNet50-based image encoder is the bottleneck during inference. The image encoder part of the multimodal model is ~6x slower than the (BERT-based) text encoder during inference. We trained a ResNet18-based student model by model distillation.
-- We achieved a dice score of 0.386 after model distillation, compared to 0.392 in the teacher model.
-- The number of parameters decreased by 46%; The inference time decreassed by ~50%; The dice scored decreased by 2%.
-![Distillation WandB Screenshot](./images/distillation.png)
 
 
 **Docker Setup**
