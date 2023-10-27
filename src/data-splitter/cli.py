@@ -87,6 +87,13 @@ if __name__ == "__main__":
         help="Upload images",
     )
 
+    parser.add_argument(
+        "-a",
+        "--all",
+        action="store_true",
+        help="Upload images",
+    )
+
     args = parser.parse_args()
 
     main(args)
