@@ -1,6 +1,6 @@
 log_to_wandb: true
 sweep: false
-lr: 0.00005
+lr: 0.0001
 batch_size: 16
 epochs: 15
 architecture: resnet18_origin
