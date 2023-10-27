@@ -45,6 +45,16 @@ def main(args=None):
         except subprocess.CalledProcessError as e:
             print(f"Error running Bash script: {e}")
 
+    if args.all:
+        print("Download and Preprocess dataset")
+
+        try:
+            subprocess.run(download_data_command, check=True)
+            subprocess.run(preprocessing_command, check=True)
+            subprocess.run(upload_data_command, check=True)
+        except subprocess.CalledProcessError as e:
+            print(f"Error running Bash script: {e}")
+
 if __name__ == "__main__":
     # Generate the inputs arguments parser
     # if you type into the terminal 'python cli.py --help', it will provide the description
@@ -69,6 +79,13 @@ if __name__ == "__main__":
         "--download_and_preprocessing",
         action="store_true",
         help="Download and preprocess images",
+    )
+
+    parser.add_argument(
+        "-a",
+        "--all",
+        action="store_true",
+        help="Download, preprocess and upload images",
     )
 
     parser.add_argument(
