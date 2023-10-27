@@ -60,28 +60,28 @@ In the previous milestone, we focused on customizing the advanced BioVil model�
 
 In our latest milestone, we embarked on a systematic exploration to enhance our model's efficacy, experimenting with various architectural modifications and loss function optimizations. By iterating through different model architectures and tweaking loss functions, we aimed to pinpoint a more suitable framework that could produce more precise box coordinate predictions in response to textual prompts. This phase of our work was marked by rigorous testing and analysis, laying down a path toward achieving improved model accuracy and efficiency in subsequent iterations.
 
-### Architecture 1: Interpolation and Binary Cross Entropy Loss
+***Architecture 1: Interpolation and Binary Cross Entropy Loss***
 
 We initiated our experiment by employing basic interpolation techniques to upscale the cosine similarity map to the original image dimensions. The rationale was to maintain structural integrity while facilitating compatibility with the image size. We then applied a binary cross entropy loss, allowing BioVil's encoder and decoder to train freely.
 
 `> Issue: The loss remained stagnant. This stagnation indicated that the model was not learning, likely because the interpolated data failed to retain essential information for accurate box coordinate prediction, rendering the model ineffective.
 `
 
-### Architecture 2: Fully Connected Layers for Direct Coordinate Output
+***Architecture 2: Fully Connected Layers for Direct Coordinate Output***
 
 To address the interpolation issue, we shifted our strategy. Instead of resizing, we integrated several fully connected (FC) layers post-similarity map to predict coordinates directly. This alteration was based on the presumption that bypassing interpolation would enable the model to focus on essential features relevant for coordinate prediction.
     
 `> Issue: Although the loss showed movement, indicating some degree of learning, the overall performance was unsatisfactory. The direct method, while circumventing the interpolation problem, likely lacked spatial context or sufficient feature representation necessary for precise coordinate prediction.
 `
 
-### Architecture 3: Convolutional Layers for Resizing and Binary Cross Entropy Loss
+***Architecture 3: Convolutional Layers for Resizing and Binary Cross Entropy Loss***
 
 Given the inadequacies in the prior structures, we adopted convolutional layers to resize the similarity map. Convolutional layers were chosen for their proficiency in handling image data and preserving spatial information, expected to enhance the learning of coordinate positions. We continued with binary cross entropy as the loss function.
 
 `> Issue: This model showed improvement, confirming that using convolution for resizing preserved more critical information. However, the performance still wasn't optimal, suggesting potential issues like the model not effectively differentiating between classes of varying difficulty.
 `
 
-### Architecture 4: Implementation of Focal Loss
+***Architecture 4: Implementation of Focal Loss***
 
 We hypothesized that the underwhelming performance could be due to class imbalance – a common complication where models struggle to recognize minority classes. To mitigate this, we introduced focal loss, known for addressing class imbalance by giving more weight to harder-to-classify instances.
 
@@ -92,11 +92,11 @@ We hypothesized that the underwhelming performance could be due to class imbalan
 
 Besides model architecture, we also made strategic advancements in both the evaluation methodology and model training enhancements, particularly through hyperparameter tuning and visualization through WandB. These steps are critical to refining our model's performance in predicting box coordinates on images based on text prompts.
 
-### Evaluation Methodology
+***Evaluation Methodology***
 
 - Objective: Our evaluation process is distinct from the training procedure, necessitating the introduction of a specific threshold selection to assess model performance accurately. We convert the model-generated heatmaps and ground truth boxes into binary masks. The need for an appropriate threshold is crucial here, as it transforms our heatmap into a binary format, suitable for direct comparison with the binary mask of the ground truth box. The Dice score serves as our evaluation metric, offering a clear measure of the model’s prediction accuracy by comparing the similarity between the generated binary mask and the ground truth.
 
-****Enhanced Training via WandB****
+***Enhanced Training via WandB***
 
 - Hyperparameter Optimization: We utilize WandB’s automatic hyperparameter sweep functionality, configured through 'config.yaml'. This approach allows us to methodically iterate over various crucial parameters, including learning rate, batch size, and the focal loss ratio (determining the weighting towards our class of interest versus the background). 
 - Visualization and Debugging: we leverage WandB's image logging feature for an in-depth visual analysis of model performance. By logging the heatmaps produced by our model alongside the corresponding ground truth boxes and text prompt, we gain valuable real-time insights into the model’s operational status during training phases. Notably, we observed that higher concentration regions within the heatmaps tend to cluster more accurately within the ground truth boxes as training progresses. This method of visualization not only aids in immediate performance assessment but also serves as a powerful debugging tool, helping identify and rectify issues dynamically, thereby ensuring consistent model improvement.
