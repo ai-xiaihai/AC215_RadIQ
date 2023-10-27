@@ -48,8 +48,11 @@ def main(args=None):
     if args.all:
         print("Download and Preprocess dataset")
 
+        # If bucket was passed as argument
+        GCS_BUCKET_NAME = args.bucket
+
         try:
-            data_downlaod()
+            data_downlaod(gcs=GCS_BUCKET_NAME)
             data_resize()
         except subprocess.CalledProcessError as e:
             print(f"Frank Error running Bash script: {e}")
@@ -92,6 +95,10 @@ if __name__ == "__main__":
         "--upload",
         action="store_true",
         help="Upload images",
+    )
+
+    parser.add_argument(
+        "-b", "--bucket", type=str, default="", help="Bucket Name to save the data"
     )
 
     args = parser.parse_args()

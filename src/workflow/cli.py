@@ -59,7 +59,7 @@ def main(args=None):
             )
             
             # Model Training (serverless)
-            model_training_task = (
+            _ = (
                 model_training(
                     project=GCP_PROJECT,
                     location=GCP_REGION,
@@ -69,8 +69,6 @@ def main(args=None):
                 .set_display_name("Model Training")
                 .after(data_proprocessor_task)
             )
-
-            model_training_task
             
 
         # Build yaml file for pipeline

@@ -1,15 +1,14 @@
 import pandas as pd
 import os
 import cv2
-import zipfile
 from google.cloud import storage
 
 dataset_folder = "/app/data"
 GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME")
 
-def data_downlaod():
+def data_downlaod(gcs=GCS_BUCKET_NAME):
     storage_client = storage.Client()
-    bucket = storage_client.get_bucket(GCS_BUCKET_NAME)
+    bucket = storage_client.get_bucket(gcs)
     prefix = "ms_cxr/raw"
     blobs = bucket.list_blobs(prefix=prefix)
 
