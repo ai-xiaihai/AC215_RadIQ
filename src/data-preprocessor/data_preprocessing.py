@@ -4,9 +4,8 @@ import cv2
 from google.cloud import storage
 
 dataset_folder = "/app/data"
-GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME")
 
-def data_downlaod(gcs=GCS_BUCKET_NAME):
+def data_downlaod(gcs):
     storage_client = storage.Client()
     bucket = storage_client.get_bucket(gcs)
     prefix = "ms_cxr/raw"

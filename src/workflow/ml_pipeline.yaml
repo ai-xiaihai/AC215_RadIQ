@@ -50,6 +50,7 @@ deploymentSpec:
         args:
         - cli.py
         - --all
+        - --bucket=radiq-app-data
         image: dooop/x-ray-app-data-preprocessor
     exec-model-training:
       container:

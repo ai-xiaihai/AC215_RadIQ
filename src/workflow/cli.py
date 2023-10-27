@@ -47,6 +47,7 @@ def main(args=None):
                 args=[
                     "cli.py",
                     "--all",
+                    "--bucket=radiq-app-data"
                 ],
             )
             return container_spec
