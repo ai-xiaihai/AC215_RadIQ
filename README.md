@@ -63,29 +63,31 @@ In our latest milestone, we embarked on a systematic exploration to enhance our 
 ***Architecture 1: Interpolation and Binary Cross Entropy Loss***
 
 We initiated our experiment by employing basic interpolation techniques to upscale the cosine similarity map to the original image dimensions. The rationale was to maintain structural integrity while facilitating compatibility with the image size. We then applied a binary cross entropy loss, allowing BioVil's encoder and decoder to train freely.
+
 `> Issue: The loss remained stagnant. This stagnation indicated that the model was not learning, likely because the interpolated data failed to retain essential information for accurate box coordinate prediction, rendering the model ineffective.
 `
 
 ***Architecture 2: Fully Connected Layers for Direct Coordinate Output***
 
 To address the interpolation issue, we shifted our strategy. Instead of resizing, we integrated several fully connected (FC) layers post-similarity map to predict coordinates directly. This alteration was based on the presumption that bypassing interpolation would enable the model to focus on essential features relevant for coordinate prediction.
-    > Issue: Although the loss showed movement, indicating some degree of learning, the overall performance was unsatisfactory. The direct method, while circumventing the interpolation problem, likely lacked spatial context or sufficient feature representation necessary for precise coordinate prediction.
-```
+    
+`> Issue: Although the loss showed movement, indicating some degree of learning, the overall performance was unsatisfactory. The direct method, while circumventing the interpolation problem, likely lacked spatial context or sufficient feature representation necessary for precise coordinate prediction.
+`
 
 ***Architecture 3: Convolutional Layers for Resizing and Binary Cross Entropy Loss***
 
 Given the inadequacies in the prior structures, we adopted convolutional layers to resize the similarity map. Convolutional layers were chosen for their proficiency in handling image data and preserving spatial information, expected to enhance the learning of coordinate positions. We continued with binary cross entropy as the loss function.
-```
-Issue:
-This model showed improvement, confirming that using convolution for resizing preserved more critical information. However, the performance still wasn't optimal, suggesting potential issues like the model not effectively differentiating between classes of varying difficulty.
-```
+
+`> Issue: This model showed improvement, confirming that using convolution for resizing preserved more critical information. However, the performance still wasn't optimal, suggesting potential issues like the model not effectively differentiating between classes of varying difficulty.
+`
 
 ***Architecture 4: Implementation of Focal Loss***
 
 Justification:
 We hypothesized that the underwhelming performance could be due to class imbalance – a common complication where models struggle to recognize minority classes. To mitigate this, we introduced focal loss, known for addressing class imbalance by giving more weight to harder-to-classify instances.
-- Outcome: The results were promising: we achieved a Dice Score of 0.392, the highest in our series of tests. This score is indicative of a significant improvement in the model's ability to predict box coordinates accurately.
 
+`> Outcome: The results were promising: we achieved a Dice Score of 0.392, the highest in our series of tests. This score is indicative of a significant improvement in the model's ability to predict box coordinates accurately.
+`
 
 **Model Training**
 
