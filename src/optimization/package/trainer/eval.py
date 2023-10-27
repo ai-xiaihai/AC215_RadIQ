@@ -97,6 +97,8 @@ def evaluate(model: nn.Module, loader: torch.utils.data.DataLoader, threshold=0.
                 query_text=text_prompt
             )
 
+            similarity_map = torch.sigmoid(similarity_map)
+
             # Convert similarity map to a binary mask
             pred_masks = (similarity_map > threshold).float()
 
@@ -120,7 +122,7 @@ def evaluate(model: nn.Module, loader: torch.utils.data.DataLoader, threshold=0.
                 path = Path(f"../../../../radiq-app-data/ms_cxr/val/" + dicom_id[0])
                 fig = plot_phrase_grounding_similarity_map(
                     path, 
-                    torch.sigmoid(similarity_map[0]).detach().cpu().numpy(), 
+                    similarity_map[0].detach().cpu().numpy(), 
                     text_prompt[0],
                     cur_dice[0].item(),
                     [ground_truth_boxes[0].detach().cpu().numpy().tolist()]
@@ -142,6 +144,35 @@ class UnitTest:
     """Unit test for evaluation"""
     def __init__(self):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    def test_eval_thresholds(self, thresholds=[0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]):
+        # Load dataset
+        batch_size = 32
+        val_loader = get_mscxr_dataloader("val", batch_size, self.device)
+
+        # Load BioViL Model
+        text_inference = get_bert_inference(BertEncoderType.BIOVIL_T_BERT)
+        image_inference = get_image_inference(ImageModelType.BIOVIL_T)
+        model = ImageTextModel(
+            image_inference_engine=image_inference,
+            text_inference_engine=text_inference,
+            width=1024,
+            height=1024,
+        )
+        model.to(self.device)
+
+        # Load checkpoint
+        model.box_head.load_state_dict(torch.load("./ckpts/best_box_head.pth"))
+
+        # Evaluate
+        result = {}
+        for thres in thresholds:
+            val_dice = evaluate(model, val_loader, threshold=thres, device=self.device)
+            print(f"Threshold: {thres}, Validation dice: {val_dice}")
+            result[thres] = val_dice
+        
+        print(result)
+
 
     def test_eval(self, visualize=False):    
         # Load dataset
@@ -191,4 +222,5 @@ class UnitTest:
 if __name__ == "__main__":
     test = UnitTest()
     # test.test_miou()
-    test.test_eval(visualize=True)
+    # test.test_eval(visualize=True)
+    test.test_eval_thresholds()
