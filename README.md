@@ -7,15 +7,41 @@ Project Organization
 .
 ├── LICENSE
 ├── README.md
-├── advanced_training
-│   └── wandb_demo.py
 ├── data_download.sh
 ├── docker-compose.yml
 ├── docker-shell.sh
 ├── images
+│   ├── vertexAI.png
 │   └── wandb.png
 ├── model
-│   ├── health_multimodal <- this directory includes all components that model.py need
+│   ├── dataset_mscxr.py
+│   ├── health_multimodal
+│   │   ├── common
+│   │   │   ├── device.py
+│   │   │   └── visualization.py
+│   │   ├── image
+│   │   │   ├── data
+│   │   │   │   ├── io.py
+│   │   │   │   └── transforms.py
+│   │   │   ├── inference_engine.py
+│   │   │   ├── model
+│   │   │   │   ├── encoder.py
+│   │   │   │   ├── model.py
+│   │   │   │   ├── modules.py
+│   │   │   │   ├── pretrained.py
+│   │   │   │   ├── resnet.py
+│   │   │   │   ├── transformer.py
+│   │   │   │   └── types.py
+│   │   │   └── utils.py
+│   │   ├── text
+│   │   │   ├── data
+│   │   │   ├── inference_engine.py
+│   │   │   ├── model
+│   │   │   │   ├── configuration_cxrbert.py
+│   │   │   │   └── modelling_cxrbert.py
+│   │   │   └── utils.py
+│   │   └── vlp
+│   │       └── inference_engine.py
 │   └── model.py
 ├── notebooks
 │   └── AC215_RadIQ_EDA.ipynb
@@ -33,11 +59,53 @@ Project Organization
     │   ├── Dockerfile
     │   ├── Pipfile
     │   └── data_preprocessing.py
-    └── data_splitting
+    ├── data_splitting
+    │   ├── Dockerfile
+    │   ├── Pipfile
+    │   └── data_splitting.py
+    ├── optimization
+    │   ├── Dockerfile
+    │   ├── LICENSE
+    │   ├── Pipfile
+    │   ├── Pipfile.lock
+    │   ├── cli-multi-gpu.sh
+    │   ├── cli.sh
+    │   ├── docker-entrypoint.sh
+    │   ├── docker-shell.bat
+    │   ├── docker-shell.sh
+    │   ├── package
+    │   │   ├── PKG-INFO
+    │   │   ├── setup.cfg
+    │   │   ├── setup.py
+    │   │   └── trainer
+    │   │       ├── __init__.py
+    │   │       ├── config.yaml
+    │   │       ├── eval.py
+    │   │       ├── run_local.sh
+    │   │       ├── sweep_config.yaml
+    │   │       ├── train.py
+    │   └── package-trainer.sh
+    └── serverless_training
         ├── Dockerfile
+        ├── LICENSE
         ├── Pipfile
-        └── data_splitting.py
-
+        ├── Pipfile.lock
+        ├── cli-multi-gpu.sh
+        ├── cli.sh
+        ├── docker-entrypoint.sh
+        ├── docker-shell.bat
+        ├── docker-shell.sh
+        ├── package
+        │   ├── PKG-INFO
+        │   ├── setup.cfg
+        │   ├── setup.py
+        │   └── trainer
+        │       ├── __init__.py
+        │       ├── eval.py
+        │       ├── health_multimodal
+        │       ├── run_local.sh
+        │       ├── train.py
+        └── package-trainer.sh
 ```
 --------
 
