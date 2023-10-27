@@ -1,7 +1,26 @@
 import pandas as pd
 import os
 import cv2
+import zipfile
+from google.cloud import storage
 
+dataset_folder = "/app/data"
+GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME")
+
+def data_downlaod():
+    storage_client = storage.Client()
+    bucket = storage_client.get_bucket(GCS_BUCKET_NAME)
+    prefix = "ms_cxr/raw"
+    blobs = bucket.list_blobs(prefix=prefix)
+
+    # Make dirs
+    os.makedirs(dataset_folder, exist_ok=True)
+
+    for blob in blobs:
+        destination_file_path = os.path.join(dataset_folder, blob.name[len(prefix)+1:])
+        if not os.path.exists(destination_file_path):
+            blob.download_to_filename(destination_file_path)
+            print(f'File {blob.name} downloaded to {destination_file_path}')
 
 def data_resize():
     """Resize image to specified dimensions.

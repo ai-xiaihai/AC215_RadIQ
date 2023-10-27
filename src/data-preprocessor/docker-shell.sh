@@ -10,7 +10,7 @@ export BASE_DIR=$(pwd)
 export SECRETS_DIR=$(pwd)/../../secrets/
 export DATA_DIR=$(pwd)/../data-downloader/radiq-app-data
 export GCP_PROJECT="ac215-radiq"
-export GCS_BUCKET_NAME="x-ray-app-ml-workflow-demo"
+export GCS_BUCKET_NAME=radiq-app-data
 
 # Build the image based on the Dockerfile
 docker build -t $IMAGE_NAME -f Dockerfile .

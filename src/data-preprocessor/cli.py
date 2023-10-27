@@ -7,7 +7,7 @@ Typical usage example from command line:
 
 import argparse
 import subprocess
-
+from data_preprocessing import data_resize, data_downlaod
 
 def main(args=None):
     download_data_command = ["bash", "data_download.sh", "MS_CXR_Local_Alignment_v1.0.0.csv", "raw"]
@@ -49,11 +49,10 @@ def main(args=None):
         print("Download and Preprocess dataset")
 
         try:
-            subprocess.run(download_data_command, check=True)
-            subprocess.run(preprocessing_command, check=True)
-            subprocess.run(upload_data_command, check=True)
+            data_downlaod()
+            data_resize()
         except subprocess.CalledProcessError as e:
-            print(f"Error running Bash script: {e}")
+            print(f"Frank Error running Bash script: {e}")
 
 if __name__ == "__main__":
     # Generate the inputs arguments parser

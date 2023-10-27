@@ -12,6 +12,7 @@ scikit-learn = "*"
 matplotlib = "*"
 seaborn = "*"
 opencv-python = "*"
+google-cloud-storage='*'
 
 [requires]
 python_version = "3.8"

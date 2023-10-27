@@ -10,7 +10,7 @@ def model_training(
     location: str = "",
     staging_bucket: str = "",
     bucket_name: str = "",
-    epochs: int = 30,
+    epochs: int = 1,
     batch_size: int = 32,
     model_name: str = "mobilenetv2",
     train_base: bool = False,

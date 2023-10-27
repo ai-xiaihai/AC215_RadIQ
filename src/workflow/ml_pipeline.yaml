@@ -16,7 +16,7 @@ components:
           isOptional: true
           parameterType: STRING
         epochs:
-          defaultValue: 30.0
+          defaultValue: 1.0
           isOptional: true
           parameterType: NUMBER_INTEGER
         location:
@@ -80,7 +80,7 @@ deploymentSpec:
         - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
           \ *\n\ndef model_training(\n    project: str = \"ac215-radiq\",\n    location:\
           \ str = \"\",\n    staging_bucket: str = \"\",\n    bucket_name: str = \"\
-          \",\n    epochs: int = 30,\n    batch_size: int = 32,\n    model_name: str\
+          \",\n    epochs: int = 1,\n    batch_size: int = 32,\n    model_name: str\
           \ = \"mobilenetv2\",\n    train_base: bool = False,\n    wandb_key: str\
           \ = \"6ac94bce286531b3989581a1c8c85cb014a32883\"\n):\n    print(\"Model\
           \ Training Job\")\n\n    import google.cloud.aiplatform as aip\n\n    #\
