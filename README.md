@@ -103,6 +103,7 @@ Furthermore, we have a fully functional docker container as well. This allows us
 **Distillation**
 - The current ResNet50-based image encoder is the bottleneck during inference. The image encoder part of the multimodal model is ~6x slower than the (BERT-based) text encoder during inference. We trained a ResNet18-based student model by model distillation.
 - We achieved a dice score of 0.386 after model distillation, compared to 0.392 in the teacher model.
+- The number of parameters decreased by 46%; The inference time decreassed by ~50%; The dice scored decreased by 2%.
 ![Distillation WandB Screenshot](./images/distillation.png)
 
 
