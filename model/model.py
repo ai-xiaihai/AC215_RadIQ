@@ -118,7 +118,7 @@ class ImageTextModel(nn.Module):
         Get the bounding box from image and text pairs.
         """
         with torch.no_grad():
-             # Get embedding
+            # Get embedding
             text_embedding = self.text_inference_engine.get_embeddings_from_prompt(
                 query_text
             )
