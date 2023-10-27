@@ -44,6 +44,16 @@ def main(args=None):
         except subprocess.CalledProcessError as e:
             print(f"Error running Bash script: {e}")
 
+    if args.all:
+        print("Doanload, split and upload dataset")
+
+        try:
+            subprocess.run(download_data_command, check=True)
+            subprocess.run(splitting_command, check=True)
+            subprocess.run(upload_data_command, check=True)
+        except subprocess.CalledProcessError as e:
+            print(f"Error running Bash script: {e}")
+
 if __name__ == "__main__":
     # Generate the inputs arguments parser
     # if you type into the terminal 'python cli.py --help', it will provide the description
