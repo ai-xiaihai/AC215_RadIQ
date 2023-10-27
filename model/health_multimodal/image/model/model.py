@@ -108,7 +108,7 @@ class ImageModel(BaseImageModel):
         """
         # assert not self.training, "This function is only implemented for evaluation mode"
         outputs = self.forward(input_img)
-        projected_embeddings = outputs.projected_patch_embeddings.detach()  # type: ignore
+        projected_embeddings = outputs.projected_patch_embeddings  # type: ignore
         if normalize:
             projected_embeddings = F.normalize(projected_embeddings, dim=1)
         projected_embeddings = projected_embeddings.permute([0, 2, 3, 1])  # B D H W -> B H W D (D: Features)

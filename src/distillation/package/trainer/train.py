@@ -18,6 +18,7 @@ from health_multimodal.common.visualization import plot_phrase_grounding_similar
 from model import ImageTextModel
 from dataset_mscxr import get_mscxr_dataloader
 from eval import evaluate, dice, get_iou
+import matplotlib.pyplot as plt 
 
     
 def run_experiment(config_path):
@@ -43,7 +44,7 @@ def train(config):
     if config['log_to_wandb']:
         run = wandb.init(project="AC215-RadIQ")
         run.config.epochs = config['epochs']
-        run.config.architecture = config["architecture"]
+        run.config.architecture = "distillation" + config["architecture"]
 
         if config['sweep']:
             run.config.learning_rate = wandb.config['lr']
@@ -63,6 +64,9 @@ def train(config):
     # Load BioViL Model
     text_inference = get_bert_inference(BertEncoderType.BIOVIL_T_BERT)
     image_inference = get_image_inference(ImageModelType.BIOVIL_T)
+    text_inference_student = get_bert_inference(BertEncoderType.BIOVIL_T_BERT)
+    image_inference_student = get_image_inference(config["architecture"])
+
     model = ImageTextModel(
         image_inference_engine=image_inference,
         text_inference_engine=text_inference,
@@ -70,28 +74,38 @@ def train(config):
         height=1024,
     )
     model.to(device)
+    model_student = ImageTextModel(
+        image_inference_engine=image_inference_student,
+        text_inference_engine=text_inference_student,
+        width=1024,
+        height=1024,
+        train_image=True,
+    )
+    model_student.to(device)
 
     # Load checkpoint if exists
     if config['img_ckpt']:
-        model.image_inference_engine.load_state_dict(torch.load(config['img_ckpt']))
+        model.image_inference_engine.load_state_dict(torch.load(config['img_ckpt'], map_location=device))
     if config['txt_ckpt']:
-        model.text_inference_engine.model.load_state_dict(torch.load(config['txt_ckpt']))
-    if config['box_ckpt']:
-        model.box_head.load_state_dict(torch.load(config['box_ckpt']))
+        model.text_inference_engine.model.load_state_dict(torch.load(config['txt_ckpt'], map_location=device))
+    if config['boxhead_ckpt']:
+        model.box_head.load_state_dict(torch.load(config['boxhead_ckpt'], map_location=device))
 
     # Define loss function and optimizer
-    opt_params = list(model.box_head.parameters())
+    opt_params = list(model_student.box_head.parameters())+list(model_student.image_inference_engine.parameters())
     optimizer = optim.Adam(opt_params, lr=config['lr'])
-    criterion = torch.nn.BCEWithLogitsLoss(reduction="none")
+    criterion = torch.nn.MSELoss()
     sig = torch.nn.Sigmoid()
 
     # Set training mode
     model.text_inference_engine.model.eval()
     model.image_inference_engine.eval()
-    model.box_head.train()
+    model.box_head.eval()
+    model_student.text_inference_engine.model.eval()
+    model_student.image_inference_engine.train()
+    model_student.box_head.train()
 
     # Train
-    best_val_dice = 0
     for epoch in range(1, config['epochs']+1):
 
         for batch_idx, data in enumerate(train_loader):
@@ -102,7 +116,12 @@ def train(config):
             dicom_id = data["dicom_id"]
 
             # Forward pass
-            pred_mask = model.get_bbox_from_raw_data(
+            with torch.no_grad():
+                pred_mask = model.get_bbox_from_raw_data(
+                    images=images,
+                    query_text=text_prompt,
+                )
+            pred_mask_student = model_student.get_bbox_from_raw_data(
                 images=images,
                 query_text=text_prompt,
             )
@@ -114,10 +133,8 @@ def train(config):
                 masks[i][row_y : row_y + row_h, row_x : row_x + row_w] = 1
 
             # Calculate loss
-            bce = criterion(pred_mask, masks)
-            bce = (config["ratio"] * masks + 1) * bce
-            loss = bce.mean()
-            dice_score = dice(masks, pred_mask > 0.0).mean()
+            loss = criterion(pred_mask_student, pred_mask)
+            dice_score = dice(masks, pred_mask_student > 0.0).mean()
 
             # Backprop
             optimizer.zero_grad()
@@ -128,7 +145,7 @@ def train(config):
             if config['log_to_wandb']:
                 wandb.log({
                     f"train/miou": dice_score,
-                    f"train/loss": loss,
+                    f"train/mse_loss": loss,
                 })
 
             if batch_idx % 1 == 0:
@@ -136,32 +153,41 @@ def train(config):
                     f"Epoch {epoch}/{config['epochs']}, Batch {batch_idx}/{len(train_loader)}, Loss: {loss.item()}, dice: {dice_score.item()}"
                 )
             
-            if config["log_to_wandb"] and batch_idx % 10 == 0:
+            if batch_idx % 5 == 0:
                 # Visualize
-                path = Path(f"../../../../radiq-app-data/train/" + dicom_id[0])
-                fig = plot_phrase_grounding_similarity_map(
-                    image_path = path, 
-                    similarity_map = sig(pred_mask[0]).detach().cpu().numpy(), 
-                    bboxes = [ground_truth_boxes[0].cpu().numpy().tolist()]
-                )
-
                 if config['log_to_wandb']:
-                    wandb.log({"train/images": wandb.Image(fig)})
+                    path = Path(f"../../../../radiq-app-data/train/" + dicom_id[0])
+                    fig = plot_phrase_grounding_similarity_map(
+                        path, 
+                        sig(pred_mask_student[0]).detach().cpu().numpy(), 
+                        [ground_truth_boxes[0].cpu().numpy().tolist()]
+                    )
+                    fig2 = plot_phrase_grounding_similarity_map(
+                        path, 
+                        sig(pred_mask[0]).detach().cpu().numpy(), 
+                        [ground_truth_boxes[0].cpu().numpy().tolist()]
+                    )
+
+                    wandb.log({"train/images_student": wandb.Image(fig)})
+                    wandb.log({"train/images_teacher": wandb.Image(fig2)})
+                    plt.close(fig)
+                    plt.close(fig2)
                 
         
         # Validation
-        train_dice = evaluate(model, train_loader, config["threshold"], device)
-        val_dice = evaluate(model, val_loader, config["threshold"], device)
-        best_val_dice = max(best_val_dice, val_dice)
+        train_dice = evaluate(model_student, train_loader, config["threshold"], device)
+        val_dice = evaluate(model_student, val_loader, config["threshold"], device)
 
         if config['log_to_wandb']:
             # Log
-            wandb.log({"train/dice": train_dice, "val/dice": val_dice, "val/best_dice": best_val_dice})
+            wandb.log({"train/dice": train_dice, "val/dice": val_dice, "val/best_dice": wandb.run.summary.get("best_dice", 0)})
 
             # Save box/segmentation head
-            torch.save(model.box_head.state_dict(), f'./ckpts/{config["architecture"]}_box_head_{epoch}.pth')
-            artifact_box = wandb.Artifact(f'box_head_checkpoints_{run.name}', type='model')
+            torch.save(model_student.box_head.state_dict(), f'./ckpts/{config["architecture"]}_box_head_{epoch}.pth')
+            torch.save(model_student.image_inference_engine.state_dict(), f'./ckpts/{config["architecture"]}_image_model_{epoch}.pth')
+            artifact_box = wandb.Artifact(f'distillation_checkpoints_{run.name}', type='model')
             artifact_box.add_file(f'./ckpts/{config["architecture"]}_box_head_{epoch}.pth', name=f'{config["architecture"]}_box_head_{epoch}.pth')
+            artifact_box.add_file(f'./ckpts/{config["architecture"]}_image_model_{epoch}.pth', name=f'{config["architecture"]}_image_model_{epoch}.pth')
             wandb.log_artifact(artifact_box)
 
     # Finish wandb session

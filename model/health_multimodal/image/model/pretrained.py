@@ -75,6 +75,17 @@ def get_biovil_image_encoder(pretrained: bool = True) -> ImageModel:
     return image_model
 
 
+def get_resnet18_image_encoder() -> ImageModel:
+    """Download weights from Hugging Face and instantiate the image model."""
+
+    image_model = ImageModel(
+        img_encoder_type=ImageEncoderType.RESNET18,
+        joint_feature_size=JOINT_FEATURE_SIZE,
+        pretrained_model_path=None,
+    )
+    return image_model
+
+
 def get_biovil_t_image_encoder() -> ImageModel:
     """Download weights from Hugging Face and instantiate the image model."""
 
