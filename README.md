@@ -169,6 +169,8 @@ Besides model architecture, we also made strategic advancements in both the eval
 - Hyperparameter Optimization: We utilize WandB’s automatic hyperparameter sweep functionality, configured through 'config.yaml'. This approach allows us to methodically iterate over various crucial parameters, including learning rate, batch size, and the focal loss ratio (determining the weighting towards our class of interest versus the background). 
 - Visualization and Debugging: we leverage WandB's image logging feature for an in-depth visual analysis of model performance. By logging the heatmaps produced by our model alongside the corresponding ground truth boxes and text prompt, we gain valuable real-time insights into the model’s operational status during training phases. Notably, we observed that higher concentration regions within the heatmaps tend to cluster more accurately within the ground truth boxes as training progresses. This method of visualization not only aids in immediate performance assessment but also serves as a powerful debugging tool, helping identify and rectify issues dynamically, thereby ensuring consistent model improvement.
 
+![WandB training_Screenshot](./images/wandb_training.png)
+
 **Kubeflow**
 
 **Model Distillation**
@@ -223,7 +225,7 @@ Below you can see the output from our Weights & Biases page. We used this tool t
 
 To allow serverless training, we adopt Google Cloud's Vertex AI. With this, we can easily train our model on the cloud without worrying about the infrastructure. We also use Vertex AI to deploy our model as an API endpoint. This allows us to easily integrate our model with our web application. Note that we have not been able to get GPU Quotas, so we are running with CPU only. Hopefully, we can get GPU Quotas soon and significantly speed up our training process.
 
-![WandB Screenshot](./images/vertexAI.png)
+![VertexAI Screenshot](./images/vertexAI.png)
 
 Furthermore, we have a fully functional docker container as well. This allows us to easily deploy our model on any cloud platform, including AWS, Azure, and GCP. To this date, we have 2 tools behind our belt - a containerized training pipeline to run on compute nodes and Vertex AI.
 
