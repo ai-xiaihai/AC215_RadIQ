@@ -52,7 +52,7 @@ RadIQ
 **Project**
 This project aims to develop an application that allows patients to better understand their chest X-ray diagnosis through an interactive web interface. By integrating chest X-rays with their associated radiology reports through multi-modal learning, users can highlight any phrases in the report, which would light up the relevant region on the X-ray.
 
-### Milestone 3 ###
+### Milestone 4 ###
 
 **Model Optimization**
 - Encoder vs decoder
