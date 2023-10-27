@@ -172,6 +172,15 @@ Besides model architecture, we also made strategic advancements in both the eval
 ![WandB training_Screenshot](./images/wandb_training.png)
 
 **Kubeflow**
+- We set up a complete ML workflow (in *src/workflow*) that executes three tasks: image preprocessing, splitting, and serverless training. Each task is executed by a Docker Container, which contains a cli.py file that gives developers flexibility to control the subtasks. The *cli.py* in *src/workflow* allows us to complete all tasks in one line.
+- How to run the workflow:
+    (a) Enter *src/workflow* and run __./Docker-shell.sh__;
+    (b) Run __Python cli.py__ with options. Options include:
+    1. __-p__: download raw data from GCP bucket; preprocess the data; and upload the preprocessed data to GCP bucket
+    2. __-s__: download preprocessed data from GCP bucket; split the data; and upload the splitted data to GCP bucket
+    3. __-m__: download splitted data from GCP bucket; train the model on Vertex AI
+    4. __-a__: execute all above tasks in the workflow. 
+- More flexible operations can be found inside the containers that handle multiple subtasks. For instance, if we simply want to download the raw images from GCP bucket, we can go to *src/data-preprocessor*, run *./Docker-shell.sh* and run *python cli.py -d* inside container to download data.
 
 **Model Distillation**
 - Since our model has several components, we first identified the bottleneck in inference speed and memory. We found that the image encoder (ResNet50-based) is the bottleneck. The image encoder part of the multimodal model is ~6x slower than the (BERT-based) text encoder during inference. We trained a ResNet18-based student model by model distillation.
