@@ -1,5 +1,5 @@
 # Use the official Debian-hosted Python image
-FROM python:3.8-slim-buster
+FROM python:3.9-slim-buster
 
 ARG DEBIAN_PACKAGES="build-essential git curl wget unzip gzip"
 
@@ -30,29 +30,23 @@ RUN set -ex; \
     echo "deb http://packages.cloud.google.com/apt gcsfuse-bionic main" > /etc/apt/sources.list.d/gcsfuse.list && \ 
     apt-get update && \
     apt-get install -y --no-install-recommends google-cloud-sdk && \
-    apt-get install -y --no-install-recommends libgl1-mesa-glx && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
     pip install --no-cache-dir --upgrade pip && \
     pip install pipenv  && \
     useradd -ms /bin/bash app -d /home/app -u 1000 -p "$(openssl passwd -1 Passw0rd)" && \
     mkdir -p /app && \
+    mkdir -p /persistent && \
+    chown app:app /persistent && \
     chown app:app /app
 
 # Switch to the new user
 USER app
 WORKDIR /app
 
-# Install python packages
-ADD --chown=app:app Pipfile Pipfile.lock /app/
-
-RUN pipenv sync
-
 # Add the rest of the source code. This is done last so we don't invalidate all
 # layers when we change a line of code.
 ADD --chown=app:app . /app
 
 # Entry point
-#ENTRYPOINT ["/bin/bash"]
-#ENTRYPOINT [ "pipenv","shell"]
 ENTRYPOINT ["/bin/bash","./docker-entrypoint.sh"]

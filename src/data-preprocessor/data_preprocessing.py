@@ -8,8 +8,8 @@ def data_resize():
     """
     # Resize images to dim x dim
     dim = 1024
-    label_path = 'MS_CXR_Local_Alignment_v1.0.0.csv'
-    image_original_path = "raw/"
+    label_path = 'data/MS_CXR_Local_Alignment_v1.0.0.csv'
+    image_original_path = "data/raw/"
     image_resized_path = "downsized"
 
     # Check if folder exists, if not create it

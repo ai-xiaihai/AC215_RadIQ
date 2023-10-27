@@ -6,11 +6,12 @@ name = "pypi"
 [dev-packages]
 
 [packages]
-pandas = "*"
+pandas = "==1.2.0"
 numpy = "*"
 scikit-learn = "*"
 matplotlib = "*"
 seaborn = "*"
+opencv-python = "*"
 
 [requires]
-python_version = "3.9"
+python_version = "3.8"
