@@ -8,7 +8,7 @@ from kfp import dsl
 def model_training(
     project: str = "ac215-radiq",
     location: str = "",
-    staging_bucket: str = "gs://radiq-app-data/ms_cxr/",
+    staging_bucket: str = "",
     bucket_name: str = "",
     epochs: int = 30,
     batch_size: int = 32,
@@ -24,7 +24,7 @@ def model_training(
     aip.init(project=project, location=location, staging_bucket=staging_bucket)
 
     container_uri = "us-docker.pkg.dev/vertex-ai/training/pytorch-gpu.1-13.py310:latest"
-    python_package_gcs_uri = f"{staging_bucket}/biovil-trainer.tar.gz"
+    python_package_gcs_uri = f"{staging_bucket}biovil-trainer.tar.gz"
 
     job = aip.CustomPythonPackageTrainingJob(
         display_name="x-ray-app-training",

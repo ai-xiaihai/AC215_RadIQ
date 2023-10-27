@@ -30,7 +30,7 @@ components:
           isOptional: true
           parameterType: STRING
         staging_bucket:
-          defaultValue: gs://radiq-app-data/ms_cxr/
+          defaultValue: ''
           isOptional: true
           parameterType: STRING
         train_base:
@@ -71,15 +71,14 @@ deploymentSpec:
           '
         - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
           \ *\n\ndef model_training(\n    project: str = \"ac215-radiq\",\n    location:\
-          \ str = \"\",\n    staging_bucket: str = \"gs://radiq-app-data/ms_cxr/\"\
-          ,\n    bucket_name: str = \"\",\n    epochs: int = 30,\n    batch_size:\
-          \ int = 32,\n    model_name: str = \"mobilenetv2\",\n    train_base: bool\
-          \ = False,\n    wandb_key: str = \"6ac94bce286531b3989581a1c8c85cb014a32883\"\
-          \n):\n    print(\"Model Training Job\")\n\n    import google.cloud.aiplatform\
-          \ as aip\n\n    # Initialize Vertex AI SDK for Python\n    aip.init(project=project,\
-          \ location=location, staging_bucket=staging_bucket)\n\n    container_uri\
-          \ = \"us-docker.pkg.dev/vertex-ai/training/pytorch-gpu.1-13.py310:latest\"\
-          \n    python_package_gcs_uri = f\"{staging_bucket}/biovil-trainer.tar.gz\"\
+          \ str = \"\",\n    staging_bucket: str = \"\",\n    bucket_name: str = \"\
+          \",\n    epochs: int = 30,\n    batch_size: int = 32,\n    model_name: str\
+          \ = \"mobilenetv2\",\n    train_base: bool = False,\n    wandb_key: str\
+          \ = \"6ac94bce286531b3989581a1c8c85cb014a32883\"\n):\n    print(\"Model\
+          \ Training Job\")\n\n    import google.cloud.aiplatform as aip\n\n    #\
+          \ Initialize Vertex AI SDK for Python\n    aip.init(project=project, location=location,\
+          \ staging_bucket=staging_bucket)\n\n    container_uri = \"us-docker.pkg.dev/vertex-ai/training/pytorch-gpu.1-13.py310:latest\"\
+          \n    python_package_gcs_uri = f\"{staging_bucket}biovil-trainer.tar.gz\"\
           \n\n    job = aip.CustomPythonPackageTrainingJob(\n        display_name=\"\
           x-ray-app-training\",\n        python_package_gcs_uri=python_package_gcs_uri,\n\
           \        python_module_name=\"trainer.train\",\n        container_uri=container_uri,\n\
@@ -118,7 +117,7 @@ root:
                 constant: ac215-radiq
             staging_bucket:
               runtimeValue:
-                constant: gs://x-ray-app-trainer-code
+                constant: gs://xray-ml-workflow/
         taskInfo:
           name: model-training
 schemaVersion: 2.1.0
