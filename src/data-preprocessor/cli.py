@@ -10,13 +10,38 @@ import subprocess
 
 
 def main(args=None):
+    download_data_command = ["bash", "data_download.sh", "MS_CXR_Local_Alignment_v1.0.0.csv", "raw"]
+    preprocessing_command = ["python", "data_preprocessing.py"]
+    upload_data_command = ["bash", "data_upload.sh", "label_1024.csv", "downsized"]
+
+    if args.download:
+        print("Download dataset")
+        try:
+            subprocess.run(download_data_command, check=True)
+        except subprocess.CalledProcessError as e:
+            print(f"Error running Bash script: {e}")
+
     if args.preprocessing:
         print("Preprocess dataset")
-        command = ["python", "data_preprocessing.py"]
+        try:
+            subprocess.run(preprocessing_command, check=True)
+        except subprocess.CalledProcessError as e:
+            print(f"Error running Bash script: {e}")
+
+    if args.download_and_preprocessing:
+        print("Download and Preprocess dataset")
 
         try:
-            subprocess.run(command, check=True)
-            print("Bash script executed successfully")
+            subprocess.run(download_data_command, check=True)
+            subprocess.run(preprocessing_command, check=True)
+        except subprocess.CalledProcessError as e:
+            print(f"Error running Bash script: {e}")
+
+    if args.upload:
+        print("Upload preprocessed dataset")
+
+        try:
+            subprocess.run(upload_data_command, check=True)
         except subprocess.CalledProcessError as e:
             print(f"Error running Bash script: {e}")
 
@@ -26,10 +51,31 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Data Preprocessor CLI")
 
     parser.add_argument(
+        "-d",
+        "--download",
+        action="store_true",
+        help="Download images",
+    )
+
+    parser.add_argument(
         "-p",
         "--preprocessing",
         action="store_true",
         help="Preprocess images",
+    )
+
+    parser.add_argument(
+        "-dp",
+        "--download_and_preprocessing",
+        action="store_true",
+        help="Download and preprocess images",
+    )
+
+    parser.add_argument(
+        "-u",
+        "--upload",
+        action="store_true",
+        help="Upload images",
     )
 
     args = parser.parse_args()
