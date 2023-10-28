@@ -232,7 +232,6 @@ Since the SOTA model is in PyTorch, our dataloader is also generated in PyTorch.
 **Experiment Tracking**
 
 Below you can see the output from our Weights & Biases page. We used this tool to track several iterations of our model training. It was tracked using the `wandb` library we included inside of our `src/data_pipeline/main.py` script.
-![WandB Screenshot](./images/wandb.png)
 
 **Vertex AI**
 
