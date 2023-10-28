@@ -46,6 +46,7 @@ def main(args=None):
                 args=[
                     "cli.py",
                     "--all",
+                    "--bucket=radiq-app-data"
                 ],
             )
             return container_spec
@@ -57,7 +58,7 @@ def main(args=None):
                 image=DATA_SPLITTER_IMAGE,
                 command=[],
                 args=[
-                    "TODO",
+                    "cli.py",
                     "--all",
                     "--bucket=radiq-app-data"
                 ],
@@ -76,6 +77,7 @@ def main(args=None):
             ).after(data_proprocessor_task)
             
             # Model Training (serverless)
+            GCS_BUCKET_NAME = "xray-ml-workflow"
             _ = (
                 model_training(
                     project=GCP_PROJECT,
