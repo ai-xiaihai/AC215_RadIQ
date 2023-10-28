@@ -7,7 +7,7 @@ Typical usage example from command line:
 
 import argparse
 import subprocess
-from data_preprocessing import data_resize, data_downlaod
+from data_preprocessing import data_resize, data_download
 
 def main(args=None):
     download_data_command = ["bash", "data_download.sh", "MS_CXR_Local_Alignment_v1.0.0.csv", "raw"]
@@ -50,9 +50,14 @@ def main(args=None):
 
         # If bucket was passed as argument
         GCS_BUCKET_NAME = args.bucket
+        print("GCS_BUCKET_NAME", GCS_BUCKET_NAME)
 
         try:
-            data_downlaod(gcs=GCS_BUCKET_NAME)
+            if GCS_BUCKET_NAME != "":
+                data_download(gcs=GCS_BUCKET_NAME)
+            else:
+                data_download()
+                
             data_resize()
         except subprocess.CalledProcessError as e:
             print(f"Frank Error running Bash script: {e}")

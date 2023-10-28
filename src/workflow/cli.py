@@ -17,14 +17,14 @@ from model_workflow import model_training
 
 
 GCP_PROJECT = os.environ["GCP_PROJECT"]
-GCS_BUCKET_NAME = os.environ["GCS_BUCKET_NAME"]
+GCS_BUCKET_NAME = "radiq-app-data"
 BUCKET_URI = f"gs://{GCS_BUCKET_NAME}"
 PIPELINE_ROOT = f"{BUCKET_URI}/pipeline_root/root"
 GCS_SERVICE_ACCOUNT = os.environ["GCS_SERVICE_ACCOUNT"]
 GCS_PACKAGE_URI = os.environ["GCS_PACKAGE_URI"]
 GCP_REGION = os.environ["GCP_REGION"]
 
-DATA_PREPROCESSOR_IMAGE = "dooop/x-ray-app-data-preprocessor"
+DATA_PREPROCESSOR_IMAGE = "lic604/x-ray-app-data-preprocessor"
 DATA_SPLITTER_IMAGE = "dlops/x-ray-app-data-splitting"
 
 
@@ -92,6 +92,7 @@ def main(args=None):
 
     if args.data_preprocessing:
         print("Full Preprocess Pipeline")
+        GCS_BUCKET_NAME = "radiq-app-data"
 
         # Define a Container Component
         @dsl.container_component
@@ -102,6 +103,7 @@ def main(args=None):
                 args=[
                     "cli.py",
                     "--all",
+                    f"--bucket {GCS_BUCKET_NAME}",
                 ],
             )
             return container_spec
@@ -115,7 +117,7 @@ def main(args=None):
 
         # Build yaml file for pipeline
         compiler.Compiler().compile(
-            preprocessing_pipeline, package_path="data_preprocessing.yaml"
+            preprocessing_pipeline, package_path="data-preprocessor.yaml"
         )
 
         # Submit job to Vertex AI
@@ -125,7 +127,7 @@ def main(args=None):
         DISPLAY_NAME = "x-ray-app-data-preprocessing-" + job_id
         job = aip.PipelineJob(
             display_name=DISPLAY_NAME,
-            template_path="data-preprocessing.yaml",
+            template_path="data-preprocessor.yaml",
             pipeline_root=PIPELINE_ROOT,
             enable_caching=False,
         )

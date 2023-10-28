@@ -5,7 +5,7 @@ set -e
 
 # Define some environment variables
 export IMAGE_NAME=x-ray-app-data-preprocessor
-export IMAGE_NAME_HUB=dooop/x-ray-app-data-preprocessor
+export IMAGE_NAME_HUB=lic604/x-ray-app-data-preprocessor
 export BASE_DIR=$(pwd)
 export SECRETS_DIR=$(pwd)/../../secrets/
 export DATA_DIR=$(pwd)/../data-downloader/radiq-app-data
@@ -18,7 +18,7 @@ docker build -t $IMAGE_NAME -f Dockerfile .
 # docker build -t $IMAGE_NAME --platform=linux/arm64/v8 -f Dockerfile .
 
 # put this docker image to dockerhub
-cat $SECRETS_DIR/dockerhub | docker login --username dooop --password-stdin
+docker login
 docker tag $IMAGE_NAME $IMAGE_NAME_HUB
 docker push $IMAGE_NAME_HUB
 

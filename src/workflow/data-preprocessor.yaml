@@ -1,0 +1,28 @@
+# PIPELINE DEFINITION
+# Name: preprocessing-pipeline
+components:
+  comp-data-proprocessor:
+    executorLabel: exec-data-proprocessor
+deploymentSpec:
+  executors:
+    exec-data-proprocessor:
+      container:
+        args:
+        - cli.py
+        - --all
+        - --bucket radiq-app-data
+        image: lic604/x-ray-app-data-preprocessor
+pipelineInfo:
+  name: preprocessing-pipeline
+root:
+  dag:
+    tasks:
+      data-proprocessor:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-data-proprocessor
+        taskInfo:
+          name: Data Proprocessor
+schemaVersion: 2.1.0
+sdkVersion: kfp-2.3.0

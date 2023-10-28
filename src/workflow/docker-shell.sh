@@ -12,8 +12,8 @@ export GCP_REGION="us-central1"
 export GCS_PACKAGE_URI="gs://xray-ml-workflow/"
 
 # Build the image based on the Dockerfile
-#docker build -t $IMAGE_NAME -f Dockerfile .
-docker build -t $IMAGE_NAME --platform=linux/amd64 -f Dockerfile .
+docker build -t $IMAGE_NAME -f Dockerfile .
+# docker build -t $IMAGE_NAME --platform=linux/amd64 -f Dockerfile .
 
 
 # Run Container

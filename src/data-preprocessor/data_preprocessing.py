@@ -3,14 +3,21 @@ import os
 import cv2
 from google.cloud import storage
 
-dataset_folder = "/app/data"
+dataset_folder = "/app/data/raw"
 GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME")
 
-def data_downlaod(gcs=GCS_BUCKET_NAME):
+def data_download(gcs=GCS_BUCKET_NAME):
     storage_client = storage.Client()
     bucket = storage_client.get_bucket(gcs)
     prefix = "ms_cxr/raw"
     blobs = bucket.list_blobs(prefix=prefix)
+    blob_csv = bucket.list_blobs(prefix = "ms_cxr/MS_CXR_Local_Alignment_v1.0.0.csv")
+
+    for blob in blob_csv:
+        destination_file_path = "/app/data/MS_CXR_Local_Alignment_v1.0.0.csv"
+        if not os.path.exists(destination_file_path):
+            blob.download_to_filename(destination_file_path)
+            print(f'File {blob.name} downloaded to {destination_file_path}')
 
     # Make dirs
     os.makedirs(dataset_folder, exist_ok=True)
@@ -26,8 +33,8 @@ def data_resize():
     """
     # Resize images to dim x dim
     dim = 1024
-    label_path = 'radiq-app-data/MS_CXR_Local_Alignment_v1.0.0.csv'
-    image_original_path = "radiq-app-data/raw/"
+    label_path = 'data/MS_CXR_Local_Alignment_v1.0.0.csv'
+    image_original_path = "data/raw"
     image_resized_path = "downsized"
 
     # Check if folder exists, if not create it
