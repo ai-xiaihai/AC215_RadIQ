@@ -186,6 +186,8 @@ Besides model architecture, we also made strategic advancements in both the eval
     4. __-a__: execute all above tasks in the workflow. 
 - More flexible operations can be found inside the containers that handle multiple subtasks. For instance, if we simply want to download the raw images from GCP bucket, we can go to *src/data-preprocessor*, run *./Docker-shell.sh* and run *python cli.py -d* inside container to download data.
 
+![Kubeflow_ML_workflow_Screenshot](./images/kubeflow.png)
+
 **Model Distillation**
 - Since our model has several components, we first identified the bottleneck in inference speed and memory. We found that the image encoder (ResNet50-based) is the bottleneck. The image encoder part of the multimodal model is ~6x slower than the (BERT-based) text encoder during inference. We trained a ResNet18-based student model by model distillation.
 - Following the distillation process in lecture 9 and trained for 5 epochs, the number of parameters decreased by 46%, the inference time decreassed by ~50%; the dice scored decreased by 2%. The final dice score of 0.386 after model distillation, compared to 0.393 in the teacher model.
