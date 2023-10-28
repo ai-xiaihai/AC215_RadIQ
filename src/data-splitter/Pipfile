@@ -3,11 +3,12 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 name = "pypi"
 
-[packages]
-pandas = "*"
-numpy = "*"
-scikit-learn = "*"
-matplotlib = "*"
-seaborn = "*"
-
 [dev-packages]
+
+[packages]
+pandas = "==1.2.0"
+numpy = "*"
+google-cloud-storage='*'
+
+[requires]
+python_version = "3.8"

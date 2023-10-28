@@ -3,11 +3,37 @@ import numpy as np
 np.random.seed(123)
 import shutil
 import os
+from google.cloud import storage
+
+dataset_folder = "/app/data/downsized"
+GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME")
+
+def data_download(gcs=GCS_BUCKET_NAME):
+    storage_client = storage.Client()
+    bucket = storage_client.get_bucket(gcs)
+    prefix = "ms_cxr/downsized"
+    blobs = bucket.list_blobs(prefix=prefix)
+    blob_csv = bucket.list_blobs(prefix = "ms_cxr/label_1024.csv")
+
+    for blob in blob_csv:
+        destination_file_path = "/app/data/label_1024.csv"
+        if not os.path.exists(destination_file_path):
+            blob.download_to_filename(destination_file_path)
+            print(f'File {blob.name} downloaded to {destination_file_path}')
+
+    # Make dirs
+    os.makedirs(dataset_folder, exist_ok=True)
+
+    for blob in blobs:
+        destination_file_path = os.path.join(dataset_folder, blob.name[len(prefix)+1:])
+        if not os.path.exists(destination_file_path):
+            blob.download_to_filename(destination_file_path)
+            print(f'File {blob.name} downloaded to {destination_file_path}')
 
 
 def data_split():
-    label_path = 'label_1024.csv'
-    image_path = "downsized/"
+    label_path = 'data/label_1024.csv'
+    image_path = "data/downsized"
 
     # Load CSV file
     df = pd.read_csv(label_path)
