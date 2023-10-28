@@ -10,32 +10,28 @@ import subprocess
 from data_preprocessing import data_resize, data_download
 
 def main(args=None):
-    download_data_command = ["bash", "data_download.sh", "MS_CXR_Local_Alignment_v1.0.0.csv", "raw"]
-    preprocessing_command = ["python", "data_preprocessing.py"]
     upload_data_command = ["bash", "data_upload.sh", "label_1024.csv", "downsized"]
 
     if args.download:
         print("Download dataset")
-        try:
-            subprocess.run(download_data_command, check=True)
-        except subprocess.CalledProcessError as e:
-            print(f"Error running Bash script: {e}")
+        if GCS_BUCKET_NAME != "":
+            data_download(gcs=GCS_BUCKET_NAME)
+        else:
+            data_download()
 
     if args.preprocessing:
         print("Preprocess dataset")
-        try:
-            subprocess.run(preprocessing_command, check=True)
-        except subprocess.CalledProcessError as e:
-            print(f"Error running Bash script: {e}")
+        data_resize()
 
     if args.download_and_preprocessing:
         print("Download and Preprocess dataset")
 
-        try:
-            subprocess.run(download_data_command, check=True)
-            subprocess.run(preprocessing_command, check=True)
-        except subprocess.CalledProcessError as e:
-            print(f"Error running Bash script: {e}")
+        if GCS_BUCKET_NAME != "":
+            data_download(gcs=GCS_BUCKET_NAME)
+        else:
+            data_download()
+
+        data_resize()
 
     if args.upload:
         print("Upload preprocessed dataset")
@@ -51,16 +47,13 @@ def main(args=None):
         # If bucket was passed as argument
         GCS_BUCKET_NAME = args.bucket
         print("GCS_BUCKET_NAME", GCS_BUCKET_NAME)
-
-        try:
-            if GCS_BUCKET_NAME != "":
-                data_download(gcs=GCS_BUCKET_NAME)
-            else:
-                data_download()
-                
-            data_resize()
-        except subprocess.CalledProcessError as e:
-            print(f"Frank Error running Bash script: {e}")
+        
+        if GCS_BUCKET_NAME != "":
+            data_download(gcs=GCS_BUCKET_NAME)
+        else:
+            data_download()
+            
+        data_resize()
 
 if __name__ == "__main__":
     # Generate the inputs arguments parser
