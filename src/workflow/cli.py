@@ -9,7 +9,6 @@ import os
 import argparse
 import random
 import string
-import subprocess
 from kfp import dsl
 from kfp import compiler
 import google.cloud.aiplatform as aip
@@ -25,7 +24,7 @@ GCS_PACKAGE_URI = os.environ["GCS_PACKAGE_URI"]
 GCP_REGION = os.environ["GCP_REGION"]
 
 DATA_PREPROCESSOR_IMAGE = "dooop/x-ray-app-data-preprocessor"
-DATA_SPLITTER_IMAGE = "dlops/x-ray-app-data-splitting"
+DATA_SPLITTER_IMAGE = "TODO here"
 
 
 def generate_uuid(length: int = 8) -> str:
@@ -51,6 +50,20 @@ def main(args=None):
                 ],
             )
             return container_spec
+        
+        # Define a Container Component
+        @dsl.container_component
+        def data_splitter():
+            container_spec = dsl.ContainerSpec(
+                image=DATA_SPLITTER_IMAGE,
+                command=[],
+                args=[
+                    "TODO",
+                    "--all",
+                    "--bucket=radiq-app-data"
+                ],
+            )
+            return container_spec
 
         @dsl.pipeline
         def ml_pipeline():
@@ -58,6 +71,10 @@ def main(args=None):
             data_proprocessor_task = data_proprocessor().set_display_name(
                 "Data Proprocessor"
             )
+
+            data_splitter_task = data_splitter().set_display_name(
+                "Data Splitter"
+            ).after(data_proprocessor_task)
             
             # Model Training (serverless)
             _ = (
@@ -68,7 +85,7 @@ def main(args=None):
                     bucket_name=GCS_BUCKET_NAME,
                 )
                 .set_display_name("Model Training")
-                .after(data_proprocessor_task)
+                .after(data_splitter_task)
             )
             
 
