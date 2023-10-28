@@ -7,7 +7,7 @@ Typical usage example from command line:
 
 import argparse
 import subprocess
-
+from data_splitting import data_split, data_download
 
 def main(args=None):
     download_data_command = ["bash", "data_download.sh", "label_1024.csv", "downsized"]
@@ -47,10 +47,17 @@ def main(args=None):
     if args.all:
         print("Doanload, split and upload dataset")
 
+        # If bucket was passed as argument
+        GCS_BUCKET_NAME = args.bucket
+        print("GCS_BUCKET_NAME", GCS_BUCKET_NAME)
+
         try:
-            subprocess.run(download_data_command, check=True)
-            subprocess.run(splitting_command, check=True)
-            subprocess.run(upload_data_command, check=True)
+            if GCS_BUCKET_NAME != "":
+                data_download(gcs=GCS_BUCKET_NAME)
+            else:
+                data_download()
+                
+            data_split()
         except subprocess.CalledProcessError as e:
             print(f"Error running Bash script: {e}")
 
@@ -92,6 +99,10 @@ if __name__ == "__main__":
         "--all",
         action="store_true",
         help="Upload images",
+    )
+
+    parser.add_argument(
+        "-b", "--bucket", type=str, default="", help="Bucket Name to save the data"
     )
 
     args = parser.parse_args()

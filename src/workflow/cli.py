@@ -25,7 +25,7 @@ GCS_PACKAGE_URI = os.environ["GCS_PACKAGE_URI"]
 GCP_REGION = os.environ["GCP_REGION"]
 
 DATA_PREPROCESSOR_IMAGE = "lic604/x-ray-app-data-preprocessor"
-DATA_SPLITTER_IMAGE = "dlops/x-ray-app-data-splitting"
+DATA_SPLITTER_IMAGE = "lic604/x-ray-app-data-splitter"
 
 
 def generate_uuid(length: int = 8) -> str:
@@ -135,7 +135,8 @@ def main(args=None):
         job.run(service_account=GCS_SERVICE_ACCOUNT)
 
     if args.data_splitting:
-        print("Full Preprocess Pipeline")
+        print("Full splitting Pipeline")
+        GCS_BUCKET_NAME = "radiq-app-data"
 
         # Define a Container Component
         @dsl.container_component
@@ -146,6 +147,7 @@ def main(args=None):
                 args=[
                     "cli.py",
                     "--all",
+                    f"--bucket {GCS_BUCKET_NAME}",
                 ],
             )
             return container_spec
@@ -159,7 +161,7 @@ def main(args=None):
 
         # Build yaml file for pipeline
         compiler.Compiler().compile(
-            splitting_pipeline, package_path="data_spliting.yaml"
+            splitting_pipeline, package_path="data-splitting.yaml"
         )
 
         # Submit job to Vertex AI
