@@ -17,7 +17,8 @@ const BasicForm = () => {
   };
 
   return (
-    <div className="card mx-auto" style={{ maxWidth: '400px' }}>
+    <div className="d-flex align-items-center justify-content-center" style={{ minHeight: '100vh' }}>
+      <div className="card" style={{ maxWidth: '400px' }}>
       <div className="card-body">
         <form onSubmit={handleSubmit}>
           <div className="mb-3 ">
@@ -25,7 +26,7 @@ const BasicForm = () => {
             <div className="mb-4 d-flex justify-content-center">
               <img
                 id="selectedImage"
-                src="https://mdbootstrap.com/img/Photos/Others/placeholder.jpg"
+                src="assets/placeholder.svg"
                 alt="example placeholder"
                 style={{ width: '300px' }}
               />
@@ -60,6 +61,7 @@ const BasicForm = () => {
           </div>
         </form>
       </div>
+    </div>
     </div>
   );
 };
