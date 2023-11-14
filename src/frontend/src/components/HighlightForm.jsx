@@ -32,7 +32,9 @@ const HighlightForm = () => {
             </div>
             <div className="mb-3">
               <label htmlFor="text" className="form-label">Highlight some text below:</label>
-              <p>Radiology Report sample content: your lung is bad, you vape too much bla bla bla</p>
+              <div class="alert alert-secondary" role="alert">
+                Radiology Report sample content: your lung is bad, you vape too much bla bla bla
+              </div> 
             </div>
             {text && 
               <div className="mb-3">
