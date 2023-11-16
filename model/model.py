@@ -19,7 +19,7 @@ class ImageTextModel(nn.Module):
         text_inference_engine: TextInferenceEngine,
         width,
         height,
-        print_inference_time=True,
+        print_inference_time=False,
         train_image=False
     ) -> None:
         super(ImageTextModel, self).__init__()
