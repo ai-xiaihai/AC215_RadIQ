@@ -133,6 +133,20 @@ def plot_phrase_grounding_similarity_map(
     return fig
 
 
+def overlay_similarity_map(
+    image, similarity_map: np.ndarray
+) -> plt.Figure:
+    import pdb
+    """Overlay similarity map on the input image."""
+    fig, axes = plt.subplots(figsize=(10, 10))
+    image = image.convert("RGB")
+
+    _plot_image(image, axis=axes)
+
+    _plot_heatmap(image, similarity_map, figure=fig, axis=axes)
+    return fig
+
+
 def _plot_bounding_boxes(
     ax: plt.Axes, bboxes: List[Tuple[float, float, float, float]], linewidth: float = 1.5, alpha: float = 0.45
 ) -> None:

@@ -136,8 +136,8 @@ class ImageTextModel(nn.Module):
         if self.print_time:
             print("inference time: image", time3 - time2, "text", time2 - time1)
 
-            # Generate similarity map
-            sim = self._get_similarity_maps_from_embeddings(image_embedding, text_embedding)
+        # Generate similarity map
+        sim = self._get_similarity_maps_from_embeddings(image_embedding, text_embedding)
 
         # Convert similarity map to bounding box
         bbox = self.convert_similarity_to_bbox(sim)
