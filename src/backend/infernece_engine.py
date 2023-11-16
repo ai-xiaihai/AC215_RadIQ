@@ -1,8 +1,7 @@
 import sys
 import os
+import wandb
 import pdb
-import matplotlib.pyplot as plt
-from pathlib import Path
 import numpy as np
 from PIL import Image
 
@@ -73,10 +72,7 @@ def dice(pred_mask, gt_mask, epsilon=1e-6):
 class InferenceEngine:
     """Inference engine for BioViL model."""
 
-    def __init__(
-        self, 
-        ckpt_path="./best_box_head.pth",
-    ):
+    def __init__(self):
         """Initialization
         
         Load BioViL model.
@@ -95,10 +91,29 @@ class InferenceEngine:
         model.to(self.device)
 
         # Load checkpoint
+        self.download_model()
         model.box_head.load_state_dict(
-            torch.load(ckpt_path, map_location=self.device)
+            torch.load(self.ckpt_path, map_location=self.device)
         )
         self.model = model
+
+    
+    def download_model(self):
+        """Download model from wandb."""
+        # Specify which checkpoint to get
+        best_sweep = 'likely-sweep-4'
+        best_epoch = 3 # 0-index
+        artifact_name = f'ac215-radiq/AC215-RadIQ/box_head_checkpoints_{best_sweep}:v{best_epoch}' 
+
+        # Download model from wandb
+        wandb.login()
+        run = wandb.init(project='AC215-RadIQ')
+        artifact = run.use_artifact(artifact_name)
+        artifact_dir = artifact.download()
+        wandb.finish()
+
+        # Check ckpt path
+        self.ckpt_path = f"{artifact_dir}/biovil_box_head_{best_epoch + 1}.pth"
 
 
     def preprocess(self, image, dim=1024):
