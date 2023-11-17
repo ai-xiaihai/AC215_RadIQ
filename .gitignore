@@ -1,6 +1,8 @@
 # RadIQ
 secrets/*
 *~
+*node_modules/
+*.nix
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
