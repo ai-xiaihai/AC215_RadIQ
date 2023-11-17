@@ -1,20 +1,50 @@
 import React, { useState } from 'react';
 
 const BasicForm = () => {
+  const [imgUpload, setimgUpload] = useState(null);
   const [thumbnail, setThumbnail] = useState(null);
   const [report, setReport] = useState('');
   const [highlight, setHighlight] = useState('');
+  const [explaining, setExplaining] = useState(false);
 
-  const handleExplain = (e) => {
+  const handleExplain = async (e) => {
     e.preventDefault();
+
+    setExplaining(true);
 
     // if user highlight some stuff
     if (window.getSelection) {
       setHighlight(window.getSelection().toString());
-    }  
+    }
 
+    // send a POST web request to a place
+    try {
+      const response = await fetch('https://api.example.com/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // Add other headers as needed
+        },
+        body: JSON.stringify({
+          image: imgUpload,
+          text: highlight
+        }),
+      });
+
+      if (response.ok) {
+        console.log('Form submitted successfully');
+        // You may want to reset the form or handle success in some way
+      } else {
+        console.error('Form submission failed');
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+    }
+    
     // Fake update results after submission
     setThumbnail('assets/sample_xray_highlighted.jpg');
+
+    setExplaining(false);
   };
 
   const displaySelectedImage = (event, _) => {
@@ -26,6 +56,7 @@ const BasicForm = () => {
       const reader = new FileReader();
       reader.onloadend = () => {
         setThumbnail(reader.result);
+        setimgUpload(reader.result);
       };
       reader.readAsDataURL(file);
     }
@@ -93,7 +124,7 @@ const BasicForm = () => {
             {highlight && 
               <div className="mb-3">
                 <label htmlFor="text" className="form-label">Please Highlight Part of Your Radiology Report:</label>
-                <div class="alert alert-info" role="alert">
+                <div className="alert alert-info" role="alert">
                   {report}
                 </div> 
               </div> 
@@ -101,14 +132,14 @@ const BasicForm = () => {
             {highlight && 
               <div className="mb-3">
                 <label htmlFor="text" className="form-label">Explained Radiology Report:</label>
-                <div class="alert alert-success" role="alert">
+                <div className="alert alert-success" role="alert">
                   {highlight}
                 </div> 
               </div> 
             }
             {highlight && <div className="d-flex justify-content-center">
-              <button type="submit" className="btn btn-primary" id='explain' disabled={!(thumbnail && highlight)}>
-                Explain
+              <button type="submit" className="btn btn-primary" id='explain' disabled={!(thumbnail && highlight && !explaining)}>
+                {explaining ? "Explaining ..." : "Explain"} 
               </button>
             </div>
             }
