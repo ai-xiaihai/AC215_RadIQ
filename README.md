@@ -7,15 +7,41 @@ Project Organization
 .
 ├── LICENSE
 ├── README.md
-├── advanced_training
-│   └── wandb_demo.py
 ├── data_download.sh
 ├── docker-compose.yml
 ├── docker-shell.sh
 ├── images
+│   ├── vertexAI.png
 │   └── wandb.png
 ├── model
-│   ├── health_multimodal <- this directory includes all components that model.py need
+│   ├── dataset_mscxr.py
+│   ├── health_multimodal
+│   │   ├── common
+│   │   │   ├── device.py
+│   │   │   └── visualization.py
+│   │   ├── image
+│   │   │   ├── data
+│   │   │   │   ├── io.py
+│   │   │   │   └── transforms.py
+│   │   │   ├── inference_engine.py
+│   │   │   ├── model
+│   │   │   │   ├── encoder.py
+│   │   │   │   ├── model.py
+│   │   │   │   ├── modules.py
+│   │   │   │   ├── pretrained.py
+│   │   │   │   ├── resnet.py
+│   │   │   │   ├── transformer.py
+│   │   │   │   └── types.py
+│   │   │   └── utils.py
+│   │   ├── text
+│   │   │   ├── data
+│   │   │   ├── inference_engine.py
+│   │   │   ├── model
+│   │   │   │   ├── configuration_cxrbert.py
+│   │   │   │   └── modelling_cxrbert.py
+│   │   │   └── utils.py
+│   │   └── vlp
+│   │       └── inference_engine.py
 │   └── model.py
 ├── notebooks
 │   └── AC215_RadIQ_EDA.ipynb
@@ -33,11 +59,53 @@ Project Organization
     │   ├── Dockerfile
     │   ├── Pipfile
     │   └── data_preprocessing.py
-    └── data_splitting
+    ├── data_splitting
+    │   ├── Dockerfile
+    │   ├── Pipfile
+    │   └── data_splitting.py
+    ├── optimization
+    │   ├── Dockerfile
+    │   ├── LICENSE
+    │   ├── Pipfile
+    │   ├── Pipfile.lock
+    │   ├── cli-multi-gpu.sh
+    │   ├── cli.sh
+    │   ├── docker-entrypoint.sh
+    │   ├── docker-shell.bat
+    │   ├── docker-shell.sh
+    │   ├── package
+    │   │   ├── PKG-INFO
+    │   │   ├── setup.cfg
+    │   │   ├── setup.py
+    │   │   └── trainer
+    │   │       ├── __init__.py
+    │   │       ├── config.yaml
+    │   │       ├── eval.py
+    │   │       ├── run_local.sh
+    │   │       ├── sweep_config.yaml
+    │   │       ├── train.py
+    │   └── package-trainer.sh
+    └── serverless_training
         ├── Dockerfile
+        ├── LICENSE
         ├── Pipfile
-        └── data_splitting.py
-
+        ├── Pipfile.lock
+        ├── cli-multi-gpu.sh
+        ├── cli.sh
+        ├── docker-entrypoint.sh
+        ├── docker-shell.bat
+        ├── docker-shell.sh
+        ├── package
+        │   ├── PKG-INFO
+        │   ├── setup.cfg
+        │   ├── setup.py
+        │   └── trainer
+        │       ├── __init__.py
+        │       ├── eval.py
+        │       ├── health_multimodal
+        │       ├── run_local.sh
+        │       ├── train.py
+        └── package-trainer.sh
 ```
 --------
 
@@ -51,6 +119,82 @@ RadIQ
 
 **Project**
 This project aims to develop an application that allows patients to better understand their chest X-ray diagnosis through an interactive web interface. By integrating chest X-rays with their associated radiology reports through multi-modal learning, users can highlight any phrases in the report, which would light up the relevant region on the X-ray.
+
+### Milestone 4 ###
+
+**Model Optimization**
+
+In the previous milestone, we focused on customizing the advanced BioVil model—a prominent self-supervised vision-language model—for the specialized task of predicting box coordinates within images, guided by text descriptions. The BioVil model is particularly adept at creating image and text embeddings and utilizes these to compute a cosine similarity map. However, we were stuck at subpar model performance. 
+
+In our latest milestone, we embarked on a systematic exploration to enhance our model's efficacy, experimenting with various architectural modifications and loss function optimizations. By iterating through different model architectures and tweaking loss functions, we aimed to pinpoint a more suitable framework that could produce more precise box coordinate predictions in response to textual prompts. This phase of our work was marked by rigorous testing and analysis, laying down a path toward achieving improved model accuracy and efficiency in subsequent iterations.
+
+***Architecture 1: Interpolation and Binary Cross Entropy Loss***
+
+We initiated our experiment by employing basic interpolation techniques to upscale the cosine similarity map to the original image dimensions. The rationale was to maintain structural integrity while facilitating compatibility with the image size. We then applied a binary cross entropy loss, allowing BioVil's encoder and decoder to train freely.
+
+`> Issue: The loss remained stagnant. This stagnation indicated that the model was not learning, likely because the interpolated data failed to retain essential information for accurate box coordinate prediction, rendering the model ineffective.
+`
+
+***Architecture 2: Fully Connected Layers for Direct Coordinate Output***
+
+To address the interpolation issue, we shifted our strategy. Instead of resizing, we integrated several fully connected (FC) layers post-similarity map to predict coordinates directly. This alteration was based on the presumption that bypassing interpolation would enable the model to focus on essential features relevant for coordinate prediction.
+    
+`> Issue: Although the loss showed movement, indicating some degree of learning, the overall performance was unsatisfactory. The direct method, while circumventing the interpolation problem, likely lacked spatial context or sufficient feature representation necessary for precise coordinate prediction.
+`
+
+***Architecture 3: Convolutional Layers for Resizing and Binary Cross Entropy Loss***
+
+Given the inadequacies in the prior structures, we adopted convolutional layers to resize the similarity map. Convolutional layers were chosen for their proficiency in handling image data and preserving spatial information, expected to enhance the learning of coordinate positions. We continued with binary cross entropy as the loss function.
+
+`> Issue: This model showed improvement, confirming that using convolution for resizing preserved more critical information. However, the performance still wasn't optimal, suggesting potential issues like the model not effectively differentiating between classes of varying difficulty.
+`
+
+***Architecture 4: Implementation of Focal Loss***
+
+We hypothesized that the underwhelming performance could be due to class imbalance – a common complication where models struggle to recognize minority classes. To mitigate this, we introduced focal loss, known for addressing class imbalance by giving more weight to harder-to-classify instances.
+
+`> Outcome: The results were promising: we achieved a Dice Score of 0.43, the highest in our series of tests. This score is indicative of a significant improvement in the model's ability to predict box coordinates accurately.
+`
+
+**Model Training**
+
+Besides model architecture, we also made strategic advancements in both the evaluation methodology and model training enhancements, particularly through hyperparameter tuning and visualization through WandB. These steps are critical to refining our model's performance in predicting box coordinates on images based on text prompts.
+
+***Evaluation Methodology***
+
+- Objective: Our evaluation process is distinct from the training procedure, necessitating the introduction of a specific threshold selection to assess model performance accurately. We convert the model-generated heatmaps and ground truth boxes into binary masks. The need for an appropriate threshold is crucial here, as it transforms our heatmap into a binary format, suitable for direct comparison with the binary mask of the ground truth box. The Dice score serves as our evaluation metric, offering a clear measure of the model’s prediction accuracy by comparing the similarity between the generated binary mask and the ground truth.
+
+- During inference, we can tune the threshold to optimize dice value on the validation set, as shown in the figure below. Once the optimal threshold has been chosen, the performance can be evaluated on the test set.
+
+![Threshold tuning](./images/threshold_tuning_val_set.png)
+
+***Enhanced Training via WandB***
+
+- Hyperparameter Optimization: We utilize WandB’s automatic hyperparameter sweep functionality, configured through 'config.yaml'. This approach allows us to methodically iterate over various crucial parameters, including learning rate, batch size, and the focal loss ratio (determining the weighting towards our class of interest versus the background). 
+- Visualization and Debugging: we leverage WandB's image logging feature for an in-depth visual analysis of model performance. By logging the heatmaps produced by our model alongside the corresponding ground truth boxes and text prompt, we gain valuable real-time insights into the model’s operational status during training phases. Notably, we observed that higher concentration regions within the heatmaps tend to cluster more accurately within the ground truth boxes as training progresses. This method of visualization not only aids in immediate performance assessment but also serves as a powerful debugging tool, helping identify and rectify issues dynamically, thereby ensuring consistent model improvement.
+
+![WandB training_Screenshot](./images/wandb_training.png)
+
+**Kubeflow**
+- We set up a complete ML workflow (in *src/workflow*) that executes three tasks: image preprocessing, splitting, and serverless training. Each task is executed by a Docker Container, which contains a cli.py file that gives developers flexibility to control the subtasks. The *cli.py* in *src/workflow* allows us to complete all tasks in one line.
+- How to run the workflow:
+    (a) Enter *src/workflow* and run __./Docker-shell.sh__;
+    (b) Run __Python cli.py__ with options. Options include:
+    1. __-p__: download raw data from GCP bucket; preprocess the data; and upload the preprocessed data to GCP bucket
+    2. __-s__: download preprocessed data from GCP bucket; split the data; and upload the splitted data to GCP bucket
+    3. __-m__: download splitted data from GCP bucket; train the model on Vertex AI
+    4. __-a__: execute all above tasks in the workflow. 
+- More flexible operations can be found inside the containers that handle multiple subtasks. For instance, if we simply want to download the raw images from GCP bucket, we can go to *src/data-preprocessor*, run *./Docker-shell.sh* and run *python cli.py -d* inside container to download data.
+
+![Kubeflow_ML_workflow_Screenshot](./images/kubeflow.png)
+
+**Model Distillation**
+- Since our model has several components, we first identified the bottleneck in inference speed and memory. We found that the image encoder (ResNet50-based) is the bottleneck. The image encoder part of the multimodal model is ~6x slower than the (BERT-based) text encoder during inference. We trained a ResNet18-based student model by model distillation.
+- Following the distillation process in lecture 9 and trained for 5 epochs, the number of parameters decreased by 46%, the inference time decreassed by ~50%; the dice scored decreased by 2%. The final dice score of 0.386 after model distillation, compared to 0.393 in the teacher model.
+- Although we consider the model distillation to be successful with ~50% decrease in number of parameters and inference time, at the cost of only 2% drop in dice, we decided not to use the distilled model in our web application. The reason is that the distilled model is not as accurate as the teacher model. We believe that the accuracy is more important than the inference time in medical application.
+
+![Distillation WandB Screenshot](./images/distillation.png)
+
 
 ### Milestone 3 ###
 
@@ -90,13 +234,12 @@ Since the SOTA model is in PyTorch, our dataloader is also generated in PyTorch.
 **Experiment Tracking**
 
 Below you can see the output from our Weights & Biases page. We used this tool to track several iterations of our model training. It was tracked using the `wandb` library we included inside of our `src/data_pipeline/main.py` script.
-![WandB Screenshot](./images/wandb.png)
 
 **Vertex AI**
 
 To allow serverless training, we adopt Google Cloud's Vertex AI. With this, we can easily train our model on the cloud without worrying about the infrastructure. We also use Vertex AI to deploy our model as an API endpoint. This allows us to easily integrate our model with our web application. Note that we have not been able to get GPU Quotas, so we are running with CPU only. Hopefully, we can get GPU Quotas soon and significantly speed up our training process.
 
-![WandB Screenshot](./images/vertexAI.png)
+![VertexAI Screenshot](./images/vertexAI.png)
 
 Furthermore, we have a fully functional docker container as well. This allows us to easily deploy our model on any cloud platform, including AWS, Azure, and GCP. To this date, we have 2 tools behind our belt - a containerized training pipeline to run on compute nodes and Vertex AI.
 

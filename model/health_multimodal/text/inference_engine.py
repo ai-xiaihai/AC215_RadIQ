@@ -61,7 +61,7 @@ class TextInferenceEngine(TextInput):
         :return: Tensor of shape (batch_size, embedding_size).
         """
 
-        assert self.is_in_eval()
+        # assert self.is_in_eval()
         tokenizer_output = self.tokenize_input_prompts(prompts=prompts, verbose=verbose)
         txt_emb = self.model.get_projected_text_embeddings(  # type: ignore
             input_ids=tokenizer_output.input_ids,

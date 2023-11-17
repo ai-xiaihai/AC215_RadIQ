@@ -1,0 +1,28 @@
+# PIPELINE DEFINITION
+# Name: splitting-pipeline
+components:
+  comp-data-splitter:
+    executorLabel: exec-data-splitter
+deploymentSpec:
+  executors:
+    exec-data-splitter:
+      container:
+        args:
+        - cli.py
+        - --all
+        - --bucket radiq-app-data
+        image: lic604/x-ray-app-data-splitter
+pipelineInfo:
+  name: splitting-pipeline
+root:
+  dag:
+    tasks:
+      data-splitter:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-data-splitter
+        taskInfo:
+          name: Data Splitter
+schemaVersion: 2.1.0
+sdkVersion: kfp-2.3.0

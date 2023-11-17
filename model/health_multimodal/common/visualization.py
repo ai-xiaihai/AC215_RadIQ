@@ -64,7 +64,7 @@ def _plot_isolines(
     contours = axis.contour(
         heatmap,
         cmap=colormap,
-        vmin=-1,
+        vmin=0,
         vmax=1,
         levels=levels,
     )
@@ -94,7 +94,7 @@ def _plot_heatmap(
     :param alpha: Heatmap opacity. Must be in :math:`[0, 1]`.
     """
     axis.imshow(image)
-    axes_image = axis.matshow(heatmap, alpha=alpha, cmap=colormap, vmin=-1, vmax=1)
+    axes_image = axis.matshow(heatmap, alpha=alpha, cmap=colormap, vmin=0, vmax=1)
     # https://www.geeksforgeeks.org/how-to-change-matplotlib-color-bar-size-in-python/
     divider = make_axes_locatable(axis)
     colorbar_axes = divider.append_axes("right", size="10%", pad=0.1)
@@ -108,7 +108,7 @@ def _plot_heatmap(
 
 
 def plot_phrase_grounding_similarity_map(
-    image_path: Path, similarity_map: np.ndarray, bboxes: Optional[List[Tuple[float, float, float, float]]] = None
+    image_path: Path, similarity_map: np.ndarray, text_prompt: str = "NONE",  dice_score: float = -1.0, bboxes: Optional[List[Tuple[float, float, float, float]]] = None
 ) -> plt.Figure:
     """Plot visualization of the input image, the similarity heatmap and the heatmap isolines.
 
@@ -116,13 +116,20 @@ def plot_phrase_grounding_similarity_map(
     :param similarity_map: Phase grounding similarity map of the same size as the image.
     :param bboxes: Optional list of bounding boxes to plot on the image.
     """
-    fig, axes = plt.subplots(1, 3, figsize=(15, 6))
+    fig, axes = plt.subplots(1, 2, figsize=(10, 6), sharex=True, sharey=True)
     image = load_image(image_path).convert("RGB")
-    _plot_image(image, axis=axes[0], title="Input image")
-    _plot_isolines(image, similarity_map, axis=axes[1], title="Similarity isolines")
-    _plot_heatmap(image, similarity_map, figure=fig, axis=axes[2], title="Similarity heatmap")
+
+    text_title = (text_prompt[:37] + '...') if len(text_prompt) > 30 else text_prompt  # Limit text to 40 characters
+    _plot_image(image, axis=axes[0], title=text_title)
+
+    # _plot_isolines(image, similarity_map, axis=axes[1], title="Similarity isolines")
+
+    heatmap_title = f"Similarity heatmap (Dice: {dice_score:.2f})"  # Modify title to include Dice score
+    _plot_heatmap(image, similarity_map, figure=fig, axis=axes[1], title=heatmap_title)
+
     if bboxes is not None:
         _plot_bounding_boxes(ax=axes[1], bboxes=bboxes)
+        # _plot_bounding_boxes(ax=axes[2], bboxes=bboxes)
     return fig
 
 
