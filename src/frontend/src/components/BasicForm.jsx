@@ -11,20 +11,20 @@ const BasicForm = () => {
     e.preventDefault();
 
     setExplaining(true);
+    setThumbnail('assets/loading.png');
 
     // if user highlight some stuff
-    if (window.getSelection) {
+    if (window.getSelection() && window.getSelection().toString().length > 0) {
       setHighlight(window.getSelection().toString());
+    } else {
+      setHighlight(report);
     }
 
     // send a POST web request to a place
     try {
       const response = await fetch('http://0.0.0.0:9000/predict', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          // Add other headers as needed
-        },
+        headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
           image: imgUpload,
           text: highlight
@@ -33,16 +33,14 @@ const BasicForm = () => {
 
       if (response.ok) {
         console.log('Form submitted successfully');
-        // You may want to reset the form or handle success in some way
+        const responseData = await response.json();
+        setThumbnail(responseData);
       } else {
         console.error('Form submission failed');
       }
     } catch (error) {
       console.error('Error submitting form:', error);
     }
-    
-    // Fake update results after submission
-    setThumbnail('assets/sample_xray_highlighted.jpg');
 
     setExplaining(false);
   };
@@ -116,7 +114,12 @@ const BasicForm = () => {
             }
             {!highlight &&
             <div className="d-flex justify-content-center">
-              <button type="button" className="btn btn-primary" id='submit' disabled={!(thumbnail && report)} onClick={() => { setHighlight(report) }}>
+              <button 
+                type="submit" 
+                className="btn btn-primary" 
+                id='submit' 
+                disabled={!(thumbnail && report)} 
+              >
                 Submit
               </button>
             </div>
