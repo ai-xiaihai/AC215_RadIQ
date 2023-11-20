@@ -136,6 +136,7 @@ dmypy.json
 
 # wandb folder
 **/wandb/*
+**/artifacts/*
 
 # checkpoint folder
 **/ckpts/*

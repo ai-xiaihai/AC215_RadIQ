@@ -19,7 +19,7 @@ const BasicForm = () => {
 
     // send a POST web request to a place
     try {
-      const response = await fetch('https://api.example.com/submit', {
+      const response = await fetch('http://0.0.0.0:9000/predict', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
