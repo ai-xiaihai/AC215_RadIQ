@@ -124,6 +124,15 @@ This project aims to develop an application that allows patients to better under
 
 **App Design**
 
+
+![](./images/solution_architecture.png)
+
+
+![](./images/solution_architecture2.png)
+
+
+![](./images/technical_architecture.png)
+
 **API-service Implementation**
 
 **Frontend Implementation**
