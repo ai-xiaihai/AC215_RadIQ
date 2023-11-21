@@ -2,18 +2,15 @@
 FROM node:16.0-alpine as build
 
 WORKDIR /app
-ENV PATH /app/node_modules/.bin:$PATH
-ENV PUBLIC_URL /
-
-COPY package.json ./
-COPY yarn.lock ./
+COPY package.json .
+COPY yarn.lock .
 RUN yarn install
-
-COPY . ./
-RUN yarn run build
+COPY . .
+RUN yarn build
 
 # Stage 2: Serve the static files using Nginx
-FROM nginx:stable
-#COPY --from=build /app/build /usr/share/nginx/html
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+FROM nginx:stable-alpine
+WORKDIR /usr/share/nginx/html
+RUN rm -rf ./*
+COPY --from=build /app/build .
+ENTRYPOINT ["nginx", "-g", "daemon off;"]
