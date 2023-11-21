@@ -130,7 +130,9 @@ This project aims to develop an application that allows patients to better under
 
 **APIs & Frontend Integration**
 
+
 **Deployment**
+
 The overview below outlines our deployment process for a two-container application on Google Cloud Platform (GCP) using Ansible. The application features a frontend for X-ray image and radiology report interactions, and an API service for model predictions.
 
 Key Components
@@ -143,6 +145,7 @@ Key Components
     * Compute instance creation and provisioning on GCP.
     * Docker container setup on the compute instance.
     * Web server configuration and setup.
+
 
 ### Milestone 4 ###
 
