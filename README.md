@@ -120,6 +120,30 @@ RadIQ
 **Project**
 This project aims to develop an application that allows patients to better understand their chest X-ray diagnosis through an interactive web interface. By integrating chest X-rays with their associated radiology reports through multi-modal learning, users can highlight any phrases in the report, which would light up the relevant region on the X-ray.
 
+### Milestone 5 ###
+
+**App Design**
+
+**API-service Implementation**
+
+**Frontend Implementation**
+
+**APIs & Frontend Integration**
+
+**Deployment**
+The overview below outlines our deployment process for a two-container application on Google Cloud Platform (GCP) using Ansible. The application features a frontend for X-ray image and radiology report interactions, and an API service for model predictions.
+
+Key Components
+* GCP API Setup: Essential GCP APIs like Compute Engine, Cloud Resource Manager, and Container Registry are enabled for integration.
+* Service Accounts: Two GCP service accounts ('deployment' and 'gcp-service') are created for deployment and storage management, with appropriate roles and private key configurations.
+* Docker and Ansible Integration: A Docker container encapsulating Ansible and other necessary tools is used to standardize the deployment process.
+* SSH Configuration: SSH keys are generated and configured for secure communication with GCP instances.
+* Ansible Automation: Ansible playbooks automate various stages of deployment, including:
+    * Docker image building and pushing to Google Container Registry.
+    * Compute instance creation and provisioning on GCP.
+    * Docker container setup on the compute instance.
+    * Web server configuration and setup.
+
 ### Milestone 4 ###
 
 **Model Optimization**
