@@ -107,6 +107,9 @@ Key Components
     * Docker container setup on the compute instance.
     * Web server configuration and setup.
 
+Here is our deployed app on a single VM in GCP:
+![](./images/container_gcp.png)
+![](./images/vm_gcp.png)
 
 ### Milestone 4 ###
 
