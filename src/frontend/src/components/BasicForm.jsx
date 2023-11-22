@@ -65,7 +65,7 @@ const BasicForm = () => {
   };
 
   return (
-    <div className="d-flex align-items-center justify-content-center" style={{ minHeight: '100vh' }}>
+    <div className="d-flex align-items-center justify-content-center" style={{ minHeight: '50vh' }}>
       <div className="card" style={{ Width: '400px' }}>
         <div className="card-body">
           <form onSubmit={handleExplain}>
