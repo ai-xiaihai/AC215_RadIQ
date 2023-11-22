@@ -109,7 +109,8 @@ Key Components
 
 Here is our deployed app on a single VM in GCP:
 
-<img src="./images/container_gcp.png" width="40"/>
+<img src="./images/container_gcp.png" width="400"/>
+
 ![](./images/vm_gcp.png)
 
 ### Milestone 4 ###
