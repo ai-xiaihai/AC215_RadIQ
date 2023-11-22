@@ -1,7 +1,7 @@
 # Use the official Debian-hosted Python image
-FROM python:3.9-slim-buster
+FROM python:3.9
 
-ARG DEBIAN_PACKAGES="build-essential git"
+ARG DEBIAN_PACKAGES="build-essential cmake git wget unzip"
 
 # Prevent apt from showing prompts
 ENV DEBIAN_FRONTEND=noninteractive
