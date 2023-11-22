@@ -142,6 +142,8 @@ Furthermore, FastAPI is used to create an API endpoint that takes in a text prom
 
 **Frontend Implementation**
 
+The frontend is implemented as a simple React app with only one route, using React hooks for simple state management. Below is a simple demo:
+
 https://github.com/ai-xiaihai/AC215_RadIQ/assets/12586770/c5a6bfe6-f057-41cb-bbb8-9cef3140b7e5
 
 **APIs & Frontend Integration**
