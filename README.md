@@ -108,7 +108,8 @@ Key Components
     * Web server configuration and setup.
 
 Here is our deployed app on a single VM in GCP:
-<img src="./images/container_gcp.png" width="500"/>
+
+<img src="./images/container_gcp.png" width="40"/>
 ![](./images/vm_gcp.png)
 
 ### Milestone 4 ###
