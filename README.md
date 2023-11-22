@@ -142,7 +142,7 @@ Furthermore, FastAPI is used to create an API endpoint that takes in a text prom
 
 **Frontend Implementation**
 
-
+https://github.com/ai-xiaihai/AC215_RadIQ/assets/12586770/c5a6bfe6-f057-41cb-bbb8-9cef3140b7e5
 
 **APIs & Frontend Integration**
 
