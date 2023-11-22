@@ -134,13 +134,18 @@ This project aims to develop an application that allows patients to better under
 ![](./images/technical_architecture.png)
 
 **API-service Implementation**
+
 Building on top of milestone 1-4, we created an `InferenceEngine` class to abstract away the details of the model and to handle the inference process. Specifically, the `__init__` method loads the model and downloads the best checkpoint from wandb. The `inference` method takes in a text prompt and an image, preprocess the inputs, run the model, and returns the heatmap overlaid on top of the original image.
 
 Furthermore, FastAPI is used to create an API endpoint that takes in a text prompt and an image, and returns the heatmap overlaid on top of the original image. The two main methods are `startup_event` and `predict`. On `startup_event`, the server will call the `__init__` method of the `InferenceEngine` class. On `predict`, the server will call the `inference` method.
 
+
 **Frontend Implementation**
 
+
+
 **APIs & Frontend Integration**
+
 The frontend and API are integration are done through common I/O formats. The frontend sends a POST request to the API endpoint with the following JSON format:
 ```
 {
