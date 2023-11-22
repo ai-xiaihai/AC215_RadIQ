@@ -7,6 +7,7 @@ ENV PUBLIC_URL /
 
 COPY package.json ./
 COPY yarn.lock ./
+COPY vite.config.js ./
 RUN yarn install
 
 COPY . ./
