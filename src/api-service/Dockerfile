@@ -1,5 +1,5 @@
 # Use the official Debian-hosted Python image
-FROM python:3.9
+FROM python:3.8
 
 ARG DEBIAN_PACKAGES="build-essential cmake git wget unzip"
 
