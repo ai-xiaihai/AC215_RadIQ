@@ -33,7 +33,7 @@ pillow = "==9.3.0"
 pydicom = "==2.2.2"
 SimpleITK = ">=2.1.1.1"
 timm = "==0.6.5"
-torch = ">=1.11.0,<2.0.0"
+torch = "==1.12.1"
 torchvision = "*"
 transformers = "==4.17.0"
 pandas = "==1.2.0"
@@ -47,5 +47,6 @@ fastapi = "0.104.1"
 python-multipart = "0.0.6"
 uvicorn = "*"
 
+
 [requires]
-python_version = "3.9"
+python_version = "3.8"

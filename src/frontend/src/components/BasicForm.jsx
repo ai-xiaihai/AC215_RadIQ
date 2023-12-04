@@ -11,7 +11,7 @@ const BasicForm = () => {
     e.preventDefault();
 
     setExplaining(true);
-    setThumbnail('assets/loading.png');
+    setThumbnail('loading.png');
 
     // if user highlight some stuff
     if (window.getSelection() && window.getSelection().toString().length > 0) {
@@ -22,7 +22,7 @@ const BasicForm = () => {
 
     // send a POST web request to a place
     try {
-      const response = await fetch('http://0.0.0.0:9000/predict', {
+      const response = await fetch('/api/predict', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
@@ -80,7 +80,7 @@ const BasicForm = () => {
                 ) : (
                   <img
                     id="selectedImage"
-                    src="assets/placeholder.svg"
+                    src="placeholder.svg"
                     alt="example placeholder"
                     style={{ width: '60px' }}
                   />

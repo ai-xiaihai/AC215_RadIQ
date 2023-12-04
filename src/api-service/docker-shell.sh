@@ -24,9 +24,6 @@ docker run --rm --name $IMAGE_NAME -ti \
 -v "$BASE_DIR":/app \
 -v "$SECRETS_DIR":/secrets \
 -v "$PERSISTENT_DIR":/persistent \
--v "$MODEL_DIR/health_multimodal":/app/api/health_multimodal \
--v "$MODEL_DIR/model.py":/app/api/model.py \
--v "$MODEL_DIR/dataset_mscxr.py":/app/api/dataset_mscxr.py \
 -p 9000:9000 \
 -e DEV=1 \
 -e GOOGLE_APPLICATION_CREDENTIALS=/secrets/model-trainer.json \

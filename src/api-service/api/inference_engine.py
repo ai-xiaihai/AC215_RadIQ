@@ -1,5 +1,6 @@
 import sys
 import os
+
 import wandb
 import pdb
 import numpy as np
@@ -38,9 +39,9 @@ def get_iou(pred_boxes, gt_boxes):
     """
     pred_boxes_x1y1x2y2 = xywh_to_x1y1x2y2(pred_boxes)
     gt_boxes_x1y1x2y2 = xywh_to_x1y1x2y2(gt_boxes)
-    
+
     iou = box_iou(pred_boxes_x1y1x2y2, gt_boxes_x1y1x2y2).diag()
-    
+
     return iou
 
 
@@ -56,16 +57,16 @@ def dice(pred_mask, gt_mask, epsilon=1e-6):
     Returns:
     - dice (torch.Tensor): Dice coefficient for each image in the batch, shape (batch_size,)
     """
-    
+
     # Compute the intersection
-    intersection = (pred_mask * gt_mask).sum(dim=(1,2))
-    
+    intersection = (pred_mask * gt_mask).sum(dim=(1, 2))
+
     # Compute the areas of both the predicted and ground truth masks
-    pred_area = pred_mask.sum(dim=(1,2))
-    gt_area = gt_mask.sum(dim=(1,2))
-    
+    pred_area = pred_mask.sum(dim=(1, 2))
+    gt_area = gt_mask.sum(dim=(1, 2))
+
     # Compute Dice Coefficient for each image in the batch
-    dice = (2. * intersection + epsilon) / (pred_area + gt_area + epsilon)
+    dice = (2.0 * intersection + epsilon) / (pred_area + gt_area + epsilon)
 
     return dice
 
@@ -75,7 +76,7 @@ class InferenceEngine:
 
     def __init__(self):
         """Initialization
-        
+
         Load BioViL model.
         """
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -98,24 +99,24 @@ class InferenceEngine:
         )
         self.model = model
 
-    
     def download_model(self):
         """Download model from wandb."""
         # Specify which checkpoint to get
-        best_sweep = 'likely-sweep-4'
-        best_epoch = 3 # 0-index
-        artifact_name = f'ac215-radiq/AC215-RadIQ/box_head_checkpoints_{best_sweep}:v{best_epoch}' 
+        best_sweep = "likely-sweep-4"
+        best_epoch = 3  # 0-index
+        artifact_name = (
+            f"ac215-radiq/AC215-RadIQ/box_head_checkpoints_{best_sweep}:v{best_epoch}"
+        )
 
         # Download model from wandb
-        wandb.login()
-        run = wandb.init(project='AC215-RadIQ')
+        wandb.login(key=os.environ['WANDB_KEY'])
+        run = wandb.init(project="AC215-RadIQ")
         artifact = run.use_artifact(artifact_name)
         artifact_dir = artifact.download()
         wandb.finish()
 
         # Check ckpt path
         self.ckpt_path = f"{artifact_dir}/biovil_box_head_{best_epoch + 1}.pth"
-
 
     def preprocess(self, image, dim=1024):
         """Preprocess image."""
@@ -132,7 +133,6 @@ class InferenceEngine:
         image = image.unsqueeze(0)
         return image
 
-
     def inference(self, image, text_prompt, threshold=0.8):
         """Inference on a single image and text prompt."""
         # Preprocess
@@ -142,20 +142,18 @@ class InferenceEngine:
         # Get similarity map
         with torch.no_grad():
             similarity_map = self.model.get_bbox_from_raw_data(
-                images=transformed_image,
-                query_text=text_prompt
+                images=transformed_image, query_text=text_prompt
             )
             similarity_map = torch.sigmoid(similarity_map)
 
             # Scale similarity_map to orignal image size
             similarity_map = torch.nn.functional.interpolate(
                 similarity_map.unsqueeze(0),
-                size=(image.size[1], image.size[0]), 
-                mode="bilinear", 
-                align_corners=False
+                size=(image.size[1], image.size[0]),
+                mode="bilinear",
+                align_corners=False,
             )
             similarity_map = similarity_map.squeeze()
-
 
         # Overlay on the original image
         fig = overlay_similarity_map(image, similarity_map.cpu().numpy())
