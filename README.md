@@ -51,6 +51,47 @@ RadIQ
 **Project**
 This project aims to develop an application that allows patients to better understand their chest X-ray diagnosis through an interactive web interface. By integrating chest X-rays with their associated radiology reports through multi-modal learning, users can highlight any phrases in the report, which would light up the relevant region on the X-ray.
 
+### Milestone 6 ###
+In our recent milestone, we achieved significant progress in setting up the deployment process using Ansible. This phase involved navigating several technical challenges. Our model, developed with PyTorch, initially faced compatibility issues with Google Cloud Platform (GCP). After exploring various solutions, we resolved this by aligning Python and Torch versions with GCP's requirements.
+
+The complex structure of our model, with its multiple components spread across different folders, presented another challenge during container deployment to GCP. We addressed this by reorganizing necessary files within the api-service, ensuring a smoother deployment process.
+
+Furthermore, our frontend container's dependency on the Vite build system, as opposed to the more common yarn build, required some adjustments. We successfully modified it to facilitate effective interaction with the api-service after deployment.
+
+These efforts have led to the successful integration of our application on a single GCP Virtual Machine (VM) instance. The application is now operational and can be accessed at http://34.42.139.78.
+
+<img src="./images/web.png" width="500"/>
+<img src="./images/VM.png" width="300"/>
+
+**API Service Container** This container has all the python files to run and expose thr backend apis.
+
+To run the container locally:
+
+- Open a terminal and go to `/src/api-service`
+- Run `sh docker-shell.sh`
+- Once inside the docker container run `uvicorn_server`
+- To view and test APIs go to `http://localhost:9000/docs`
+
+**Frontend Container** This container contains all the files to develop and build the app frontend. There are dockerfiles for both development and production
+
+To run the container locally:
+
+- Open a terminal and go to `/src/frontend`
+- Run `sh docker-shell.sh`
+- If running the container for the first time, run `yarn install`
+- Once inside the docker container run `yarn run build`, which actually makes use of the vite build into the `/dist` folder.
+- Go to `` to access the app locally
+
+**Deployment Container** This container helps manage building and deploying all our app containers. The deployment is to GCP and all docker images go to GCR.
+
+To run the container locally:
+
+- If any changes are made to the frontend container, go into the frontend container and run `yarn run build`
+- Open a terminal and go to `/src/deployment`
+- Run `sh docker-shell.sh`
+- Build and Push Docker Containers to GCR (Google Container Registry) `ansible-playbook deploy-docker-images.yml -i inventory.yml`
+- …
+- 
 ### Milestone 5 ###
 
 **App Design**
