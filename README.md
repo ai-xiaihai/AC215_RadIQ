@@ -60,8 +60,8 @@ Furthermore, our frontend container's dependency on the Vite build system, as op
 
 These efforts have led to the successful integration of our application on a single GCP Virtual Machine (VM) instance. The application is now operational and can be accessed at http://34.42.139.78.
 
-<img src="./images/web.png" width="500"/>
-<img src="./images/VM.png" width="300"/>
+<img src="./images/web.png" width="700"/>
+<img src="./images/VM.png" width="500"/>
 
 **API Service Container** This container has all the python files to run and expose thr backend apis.
 
