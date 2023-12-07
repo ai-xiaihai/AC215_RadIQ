@@ -76,7 +76,7 @@ During inference, we can tune the threshold to optimize the dice value on the va
 ![](https://cdn-images-1.medium.com/max/2000/1*RTxjU4z9fMIBemnAKvILgw.png)
 
 ### WandB
-In our project, we have significantly enhanced the training of our experiment by incorporating WandB, a robust tool that offers both hyperparameter optimization and advanced visualization capabilities.
+In our project, we have significantly enhanced the training of our experiment by incorporating [WandB](https://wandb.ai/site), a robust tool that offers both hyperparameter optimization and advanced visualization capabilities.
 * **Hyperparameter Optimization**: We utilize WandB’s automatic hyperparameter sweep functionality, configured through 'config.yaml'. This approach allows us to methodically iterate over various crucial parameters, including learning rate, batch size, and the focal loss ratio (determining the weighting towards our class of interest versus the background).
 * **Visualization and Debugging**: we leverage WandB's image logging feature for an in-depth visual analysis of model performance. By logging the heatmaps produced by our model alongside the corresponding ground truth boxes and text prompt, we gain valuable real-time insights into the model’s operational status during training phases. Notably, we observed that higher concentration regions within the heatmaps tend to cluster more accurately within the ground truth boxes as training progresses. This method of visualization not only aids in immediate performance assessment but also serves as a powerful debugging tool, helping identify and rectify issues dynamically, thereby ensuring consistent model improvement.
 
