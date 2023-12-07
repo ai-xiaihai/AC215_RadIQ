@@ -10,102 +10,33 @@ Project Organization
 ├── data_download.sh
 ├── docker-compose.yml
 ├── docker-shell.sh
-├── images
-│   ├── vertexAI.png
-│   └── wandb.png
 ├── model
 │   ├── dataset_mscxr.py
 │   ├── health_multimodal
-│   │   ├── common
-│   │   │   ├── device.py
-│   │   │   └── visualization.py
-│   │   ├── image
-│   │   │   ├── data
-│   │   │   │   ├── io.py
-│   │   │   │   └── transforms.py
-│   │   │   ├── inference_engine.py
-│   │   │   ├── model
-│   │   │   │   ├── encoder.py
-│   │   │   │   ├── model.py
-│   │   │   │   ├── modules.py
-│   │   │   │   ├── pretrained.py
-│   │   │   │   ├── resnet.py
-│   │   │   │   ├── transformer.py
-│   │   │   │   └── types.py
-│   │   │   └── utils.py
-│   │   ├── text
-│   │   │   ├── data
-│   │   │   ├── inference_engine.py
-│   │   │   ├── model
-│   │   │   │   ├── configuration_cxrbert.py
-│   │   │   │   └── modelling_cxrbert.py
-│   │   │   └── utils.py
-│   │   └── vlp
-│   │       └── inference_engine.py
 │   └── model.py
 ├── notebooks
 │   └── AC215_RadIQ_EDA.ipynb
+├── package-lock.json
+├── package.json
 ├── radiq-app-data
+│   ├── ms_cxr
+│   ├── ms_cxr.dvc
+│   └── visualize
 └── src
     ├── __init__.py
+    ├── api-service <- Code for App backend APIs
+    ├── data-downloader
+    ├── data-preprocessor
+    ├── data-splitter
     ├── data_extraction.py
     ├── data_pipeline
-    │   ├── Dockerfile
-    │   ├── Pipfile
-    │   ├── Pipfile.lock
-    │   ├── data_download.sh
-    │   └── main.py
-    ├── data_preprocessing
-    │   ├── Dockerfile
-    │   ├── Pipfile
-    │   └── data_preprocessing.py
-    ├── data_splitting
-    │   ├── Dockerfile
-    │   ├── Pipfile
-    │   └── data_splitting.py
+    ├── deployment <- Code for App deployment to GCP
+    ├── distillation
+    ├── dummy
+    ├── frontend <- Code for App frontend
     ├── optimization
-    │   ├── Dockerfile
-    │   ├── LICENSE
-    │   ├── Pipfile
-    │   ├── Pipfile.lock
-    │   ├── cli-multi-gpu.sh
-    │   ├── cli.sh
-    │   ├── docker-entrypoint.sh
-    │   ├── docker-shell.bat
-    │   ├── docker-shell.sh
-    │   ├── package
-    │   │   ├── PKG-INFO
-    │   │   ├── setup.cfg
-    │   │   ├── setup.py
-    │   │   └── trainer
-    │   │       ├── __init__.py
-    │   │       ├── config.yaml
-    │   │       ├── eval.py
-    │   │       ├── run_local.sh
-    │   │       ├── sweep_config.yaml
-    │   │       ├── train.py
-    │   └── package-trainer.sh
-    └── serverless_training
-        ├── Dockerfile
-        ├── LICENSE
-        ├── Pipfile
-        ├── Pipfile.lock
-        ├── cli-multi-gpu.sh
-        ├── cli.sh
-        ├── docker-entrypoint.sh
-        ├── docker-shell.bat
-        ├── docker-shell.sh
-        ├── package
-        │   ├── PKG-INFO
-        │   ├── setup.cfg
-        │   ├── setup.py
-        │   └── trainer
-        │       ├── __init__.py
-        │       ├── eval.py
-        │       ├── health_multimodal
-        │       ├── run_local.sh
-        │       ├── train.py
-        └── package-trainer.sh
+    ├── serverless_training
+    └── workflow
 ```
 --------
 
@@ -119,6 +50,68 @@ RadIQ
 
 **Project**
 This project aims to develop an application that allows patients to better understand their chest X-ray diagnosis through an interactive web interface. By integrating chest X-rays with their associated radiology reports through multi-modal learning, users can highlight any phrases in the report, which would light up the relevant region on the X-ray.
+
+### Milestone 5 ###
+
+**App Design**
+
+
+![](./images/solution_architecture.png)
+
+
+![](./images/solution_architecture2.png)
+
+
+![](./images/technical_architecture.png)
+
+**API-service Implementation**
+
+Building on top of milestone 1-4, we created an `InferenceEngine` class to abstract away the details of the model and to handle the inference process. Specifically, the `__init__` method loads the model and downloads the best checkpoint from wandb. The `inference` method takes in a text prompt and an image, preprocess the inputs, run the model, and returns the heatmap overlaid on top of the original image.
+
+Furthermore, FastAPI is used to create an API endpoint that takes in a text prompt and an image, and returns the heatmap overlaid on top of the original image. The two main methods are `startup_event` and `predict`. On `startup_event`, the server will call the `__init__` method of the `InferenceEngine` class. On `predict`, the server will call the `inference` method.
+
+
+**Frontend Implementation**
+
+The frontend is implemented as a simple React app with only one route, using React hooks for simple state management. Below is a simple demo:
+
+https://github.com/ai-xiaihai/AC215_RadIQ/assets/12586770/c5a6bfe6-f057-41cb-bbb8-9cef3140b7e5
+
+**APIs & Frontend Integration**
+
+The frontend and API are integration are done through common I/O formats. The frontend sends a POST request to the API endpoint with the following JSON format:
+```
+{
+    "text": "text prompt",
+    "image": "base64 encoded image"
+}
+```
+
+The API endpoint returns the heatmap in the following format:
+```
+heatmap: "base64 encoded heatmap"
+```
+
+**Deployment**
+
+The overview below outlines our deployment process for a two-container application on Google Cloud Platform (GCP) using Ansible. The application features a frontend for X-ray image and radiology report interactions, and an API service for model predictions.
+
+Key Components
+* GCP API Setup: Essential GCP APIs like Compute Engine, Cloud Resource Manager, and Container Registry are enabled for integration.
+* Service Accounts: Two GCP service accounts ('deployment' and 'gcp-service') are created for deployment and storage management, with appropriate roles and private key configurations.
+* Docker and Ansible Integration: A Docker container encapsulating Ansible and other necessary tools is used to standardize the deployment process.
+* SSH Configuration: SSH keys are generated and configured for secure communication with GCP instances.
+* Ansible Automation: Ansible playbooks automate various stages of deployment, including:
+    * Docker image building and pushing to Google Container Registry.
+    * Compute instance creation and provisioning on GCP.
+    * Docker container setup on the compute instance.
+    * Web server configuration and setup.
+
+Here is our deployed app on a single VM in GCP:
+
+<img src="./images/container_gcp.png" width="400"/>
+
+![](./images/vm_gcp.png)
 
 ### Milestone 4 ###
 
