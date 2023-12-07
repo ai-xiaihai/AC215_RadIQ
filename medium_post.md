@@ -93,3 +93,6 @@ The frontend and API are integration are done through common I/O formats. The fr
 The API endpoint returns the heatmap in the following format:
 
     heatmap: "base64 encoded heatmap"
+
+### Frontend
+We created a simple React web app to allow patients easily interact with our AI model. The simple React app uses React Router for routing and React hooks for state management. We also leveraged state-of-the-art build tool Vite for better development expereince and performance.
