@@ -116,6 +116,8 @@ Specifically, the deployment follows the steps below, and each step is run as an
 
 Our deployed app can be found at [http://34.42.139.78](http://34.42.139.78).
 
+<img src="./images/web.png" width="900"/>
+
 In our project, deploying our PyTorch-developed model to Google Cloud Platform (GCP) presented several challenges. Initially, we encountered compatibility issues, which we overcame by aligning our Python and Torch versions with GCP's requirements. Additionally, the complex structure of our model, consisting of multiple components spread across various folders, complicated the container deployment to GCP. We streamlined this by reorganizing the necessary files within the api-service for a smoother deployment process. Another hurdle was adapting our frontend container, which relied on the Vite build system instead of the more commonly used yarn build. We successfully modified this to ensure efficient interaction with the api-service post-deployment. These concerted efforts culminated in the successful integration of our application on a single GCP Virtual Machine (VM) instance, marking a significant milestone in our project's development.
 
 ### How to run
