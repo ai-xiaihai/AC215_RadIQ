@@ -1,5 +1,5 @@
 
-## A Platform for Interactive Medical Image Interpretation
+# A Platform for Interactive Medical Image Interpretation
 
 ## Motivation
 
@@ -75,6 +75,12 @@ During inference, we can tune the threshold to optimize the dice value on the va
 
 ![](https://cdn-images-1.medium.com/max/2000/1*RTxjU4z9fMIBemnAKvILgw.png)
 
+### WandB
+In our project, we have significantly enhanced the training of our experiment by incorporating WandB, a robust tool that offers both hyperparameter optimization and advanced visualization capabilities.
+* **Hyperparameter Optimization**: We utilize WandB’s automatic hyperparameter sweep functionality, configured through 'config.yaml'. This approach allows us to methodically iterate over various crucial parameters, including learning rate, batch size, and the focal loss ratio (determining the weighting towards our class of interest versus the background).
+* **Visualization and Debugging**: we leverage WandB's image logging feature for an in-depth visual analysis of model performance. By logging the heatmaps produced by our model alongside the corresponding ground truth boxes and text prompt, we gain valuable real-time insights into the model’s operational status during training phases. Notably, we observed that higher concentration regions within the heatmaps tend to cluster more accurately within the ground truth boxes as training progresses. This method of visualization not only aids in immediate performance assessment but also serves as a powerful debugging tool, helping identify and rectify issues dynamically, thereby ensuring consistent model improvement.
+
+
 ## Deployment
 
 ### API
@@ -96,3 +102,31 @@ The API endpoint returns the heatmap in the following format:
 
 ### Frontend
 We created a simple React web app to allow patients easily interact with our AI model. The simple React app uses React Router for routing and React hooks for state management. We also leveraged state-of-the-art build tool Vite for better development expereince and performance.
+
+### Ansible
+
+Our application is seamlessly integrated into Google Cloud Platform (GCP) through a single Virtual Machine (VM) instance, leveraging the power of [Ansible Playbooks](https://docs.ansible.com/ansible/latest/user_guide/playbooks.html). Ansible, a robust deployment tool, streamlines our process, making deployments to GCP more efficient. By utilizing YAML scripts for initial setup, we've significantly accelerated the deployment steps. This method eliminates the manual labor typically involved in VM creation, enabling script execution directly from the command line. Additionally, Ansible's compatibility with source control systems like GitHub ensures our setup is easily distributable and updatable. 
+
+Specifically, the deployment follows the steps below, and each step is run as an Ansible script:
+
+1. Deploy local api-service and frontend containers to Google Container Registry.
+2. Deploy the GCP VM Provision the instanc
+3. Deploying the containers from GCR to the VM.
+4. Deploy NGINX on the webserver.
+
+Our deployed app can be found at [http://34.42.139.78](http://34.42.139.78).
+
+In our project, deploying our PyTorch-developed model to Google Cloud Platform (GCP) presented several challenges. Initially, we encountered compatibility issues, which we overcame by aligning our Python and Torch versions with GCP's requirements. Additionally, the complex structure of our model, consisting of multiple components spread across various folders, complicated the container deployment to GCP. We streamlined this by reorganizing the necessary files within the api-service for a smoother deployment process. Another hurdle was adapting our frontend container, which relied on the Vite build system instead of the more commonly used yarn build. We successfully modified this to ensure efficient interaction with the api-service post-deployment. These concerted efforts culminated in the successful integration of our application on a single GCP Virtual Machine (VM) instance, marking a significant milestone in our project's development.
+
+### How to run
+For the first time deployment, follow the following steps:
+- Get the credentials `deployment.json` and `gcp-service.json`, and put in `/src/secrets`
+- Start VM instance. SSH into the VM and run `sudo docker image ls` to ensure that the required docker images are in GCR.
+- Copy VM external IP to the host entry in `/src/deployment/inventory.yml`.
+- Open terminal, go into `src/deployment` and run `sh docker-shell.sh` to enter the deployment container.
+- Run `ansible-playbook deploy-setup-containers.yml -i inventory.yml` to build containers into VM.
+- Run `ansible-playbook deploy-setup-webserver.yml -i inventory.yml`  to build web server container into VM.
+- Ensure that all required containers are ready: in VM, run `sudo docker container ls`, should see three containers.
+- Go to browser and open `http://<External_IP>`.
+
+
