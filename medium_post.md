@@ -41,6 +41,12 @@ We also plotted some samples of our dataset:
 
 ![](images/eda.png)
 
+In our dataset, each box is defined by a tuple consisting of (x, y, w, h). The area delineated by this box corresponds to the text label (positioned above the images in the plot).
+
+Here is the distribution of the diseases in our dataset:
+
+![](images/cats.png)
+
 ## Model development
 
 ### Related work
