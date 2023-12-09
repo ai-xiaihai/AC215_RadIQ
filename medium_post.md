@@ -80,6 +80,20 @@ In our project, we have significantly enhanced the training of our experiment by
 * **Hyperparameter Optimization**: We utilize WandB’s automatic hyperparameter sweep functionality, configured through 'config.yaml'. This approach allows us to methodically iterate over various crucial parameters, including learning rate, batch size, and the focal loss ratio (determining the weighting towards our class of interest versus the background).
 * **Visualization and Debugging**: we leverage WandB's image logging feature for an in-depth visual analysis of model performance. By logging the heatmaps produced by our model alongside the corresponding ground truth boxes and text prompt, we gain valuable real-time insights into the model’s operational status during training phases. Notably, we observed that higher concentration regions within the heatmaps tend to cluster more accurately within the ground truth boxes as training progresses. This method of visualization not only aids in immediate performance assessment but also serves as a powerful debugging tool, helping identify and rectify issues dynamically, thereby ensuring consistent model improvement.
 
+### Kubeflow
+- To automate our model training workflow, we set up Kubeflow scripts to excute all the tasks on Vertex AI Pipelines. This allows us to easily re-run our ML pipeline when there is change in our data or model architecture. Our workflow includes three tasks: image preprocessing, data splitting, and serverless training. All tasks are continaerized using Docker. Once executed, Vertex AI will excute these tasks sequentially (screenshot below).  
+- We created a cli.py file that gives developers flexibility to control the subtasks. To run the workflow, we only need the following simple commands: 
+    (a) Enter *src/workflow* and run __./Docker-shell.sh__;
+    (b) Run __Python cli.py__ with options. Options include:
+    1. __-p__: download raw data from GCP bucket; preprocess the data; and upload the preprocessed data to GCP bucket
+    2. __-s__: download preprocessed data from GCP bucket; split the data; and upload the splitted data to GCP bucket
+    3. __-m__: download splitted data from GCP bucket; train the model on Vertex AI
+    4. __-a__: execute all above tasks in the workflow. 
+- More flexible operations can be found inside the containers that handle multiple subtasks. For instance, if we simply want to download the raw images from GCP bucket, we can go to *src/data-preprocessor*, run *./Docker-shell.sh* and run *python cli.py -d* inside container to download data.
+
+
+![Kubeflow_ML_workflow_Screenshot](./images/kubeflow.png)
+
 
 ## Deployment
 
