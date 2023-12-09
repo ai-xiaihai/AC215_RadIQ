@@ -1,12 +1,12 @@
 AC215-RadIQ
 ==============================
 ## Presentation Video ##
-<Link Here>
+\<Link Here\>
 
 ## Blog Post Link ##
-<Link Here>
+\<Link Here\>
 
----------
+
 Project Organization
 ---------
 ```
