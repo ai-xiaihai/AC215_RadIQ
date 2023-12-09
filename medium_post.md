@@ -33,6 +33,14 @@ Elevating our approach beyond the standard curriculum, we built a dataset class 
 
  2. Our method is particularly beneficial for handling large-scale databases. In an era where machine learning increasingly focuses on big data, databases can scale up to terabytes. Downloading such massive volumes of data locally, or even on a remote server, is impractical. Our approach mitigates this challenge by enabling scalable access to data — fetching only what the model requires at a given time. This not only saves storage space but also enhances efficiency in data handling.
 
+### Exploratory data analysis (EDA)
+
+After finished the data preprocessing, we performed EDA. Our dataset contains 1448 tuples of (text, image, ground_truth_box). All the images have resolution 1024x1024.
+
+We also plotted some samples of our dataset:
+
+![](images/eda.png)
+
 ## Model development
 
 ### Related work
@@ -74,6 +82,14 @@ Our evaluation process is distinct from the training procedure, necessitating th
 During inference, we can tune the threshold to optimize the dice value on the validation set, as shown in the figure below. Once the optimal threshold has been chosen, the performance can be evaluated on the test set.
 
 ![](https://cdn-images-1.medium.com/max/2000/1*RTxjU4z9fMIBemnAKvILgw.png)
+
+### Model distillation
+
+- Since our model has several components, we first identified the bottleneck in inference speed and memory. We found that the image encoder (ResNet50-based) is the bottleneck. The image encoder part of the multimodal model is ~6x slower than the (BERT-based) text encoder during inference. We trained a ResNet18-based student model by model distillation.
+- Following the distillation process in lecture 9 and trained for 5 epochs, the number of parameters decreased by 46%, the inference time decreassed by ~50%; the dice scored decreased by 2%. The final dice score of 0.386 after model distillation, compared to 0.393 in the teacher model.
+- Although we consider the model distillation to be successful with ~50% decrease in number of parameters and inference time, at the cost of only 2% drop in dice, we decided not to use the distilled model in our web application. The reason is that the distilled model is not as accurate as the teacher model. We believe that the accuracy is more important than the inference time in medical application.
+
+![Distillation WandB Screenshot](./images/distillation.png)
 
 ### WandB
 In our project, we have significantly enhanced the training of our experiment by incorporating [WandB](https://wandb.ai/site), a robust tool that offers both hyperparameter optimization and advanced visualization capabilities.
@@ -136,7 +152,7 @@ In our project, deploying our PyTorch-developed model to Google Cloud Platform (
 
 ### How to run
 For the first time deployment, follow the following steps:
-- Get the credentials `deployment.json` and `gcp-service.json`, and put in `/src/secrets`
+- Get the credentials `deployment.json` and `gcp-service.json`, and put in `/src/secrets`.
 - Start VM instance. SSH into the VM and run `sudo docker image ls` to ensure that the required docker images are in GCR.
 - Copy VM external IP to the host entry in `/src/deployment/inventory.yml`.
 - Open terminal, go into `src/deployment` and run `sh docker-shell.sh` to enter the deployment container.
@@ -145,4 +161,21 @@ For the first time deployment, follow the following steps:
 - Ensure that all required containers are ready: in VM, run `sudo docker container ls`, should see three containers.
 - Go to browser and open `http://<External_IP>`.
 
+### Kubernetes
 
+Our application can also be deployed with scaling using Kubernetes Engine on Google Cloud Platform (GCP). Kubernetes is an open-source platform designed to automate deploying, scaling, and operating application containers. It eliminates many of the manual processes involved in deploying and scaling containerized applications. With Kubernetes, you can cluster together groups of hosts running Linux containers, and Kubernetes helps you easily and efficiently manage those clusters. Our application leverages the power of Kubernetes for orchestration, ensuring that we can scale our services up or down as needed, handle load balancing, and automate deployment across multiple environments.
+
+To deploy the cluster on Kubernetes Engine on Google Cloud Platform (GCP), follow the steps below:
+
+- Search for each of these in the GCP search bar and click enable to enable these API's
+  -  Compute Engine API
+  -  Service Usage API
+  -  Cloud Resource Manager API
+  -  Google Container Registry API
+  -  Kubernetes Engine API
+
+- Get the credentials `deployment.json` and `gcp-service.json`, and put in `/src/secrets`.
+- Open terminal, go into `src/deployment` and run `sh docker-shell.sh` to enter the deployment container.
+- Build and Push Docker Containers to GCR (Google Container Registry) `ansible-playbook deploy-docker-images.yml -i inventory.yml`.
+- Create & deploy Kubernetes cluster: `ansible-playbook deploy-k8s-cluster.yml -i inventory.yml --extra-vars cluster_state=present`.
+- Delete Kubernetes cluster: `ansible-playbook deploy-k8s-cluster.yml -i inventory.yml --extra-vars cluster_state=absent`

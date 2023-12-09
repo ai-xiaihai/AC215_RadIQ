@@ -52,7 +52,7 @@ RadIQ
 This project aims to develop an application that allows patients to better understand their chest X-ray diagnosis through an interactive web interface. By integrating chest X-rays with their associated radiology reports through multi-modal learning, users can highlight any phrases in the report, which would light up the relevant region on the X-ray.
 
 ### Milestone 6 ###
-In our recent milestone, we achieved significant progress in setting up the deployment process using Ansible. This phase involved navigating several technical challenges. Our model, developed with PyTorch, initially faced compatibility issues with Google Cloud Platform (GCP). After exploring various solutions, we resolved this by aligning Python and Torch versions with GCP's requirements.
+In our recent milestone, we achieved significant progress in setting up the deployment process using Ansible and Kubernetes. This phase involved navigating several technical challenges. Our model, developed with PyTorch, initially faced compatibility issues with Google Cloud Platform (GCP). After exploring various solutions, we resolved this by aligning Python and Torch versions with GCP's requirements.
 
 The complex structure of our model, with its multiple components spread across different folders, presented another challenge during container deployment to GCP. We addressed this by reorganizing necessary files within the api-service, ensuring a smoother deployment process.
 
@@ -61,6 +61,8 @@ Furthermore, our frontend container's dependency on the Vite build system, as op
 These efforts have led to the successful integration of our application on a single GCP Virtual Machine (VM) instance. The application is now operational and can be accessed at http://34.42.139.78.
 
 <img src="./images/web.png" width="900"/>
+
+We chose a single GCP Virtual Machine (VM) instance intead of Kubernetes Engine is due to cost concerns.
 
 **API Service Container** This container has all the python files to run and expose thr backend apis.
 
@@ -89,7 +91,17 @@ To run the container locally:
 - Open a terminal and go to `/src/deployment`
 - Run `sh docker-shell.sh`
 - Build and Push Docker Containers to GCR (Google Container Registry) `ansible-playbook deploy-docker-images.yml -i inventory.yml`
-- …
+
+If you also want to deploy with scaling using Kubernetes Engine on Google Cloud Platform (GCP):
+- Create & deploy Kubernetes cluster: `ansible-playbook deploy-k8s-cluster.yml -i inventory.yml --extra-vars cluster_state=present`
+- Delete Kubernetes cluster: `ansible-playbook deploy-k8s-cluster.yml -i inventory.yml --extra-vars cluster_state=absent`
+
+
+**Kubernetes**
+
+Here is our deployed app on a Kubernetes cluster in GCP:
+
+![](./images/k8s_gcp.png)
 
 **Overall Workflow**
 
@@ -168,6 +180,7 @@ Key Components
     * Compute instance creation and provisioning on GCP.
     * Docker container setup on the compute instance.
     * Web server configuration and setup.
+    * Kubernetes cluster creation & deployment & deletion.
 
 Here is our deployed app on a single VM in GCP:
 
