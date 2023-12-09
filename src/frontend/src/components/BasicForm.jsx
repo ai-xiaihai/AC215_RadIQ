@@ -9,17 +9,20 @@ const BasicForm = () => {
 
   const handleExplain = async (e) => {
     e.preventDefault();
-
+  
     setExplaining(true);
     setThumbnail('loading.png');
-
+  
     // if user highlight some stuff
+    let highlightText;
     if (window.getSelection() && window.getSelection().toString().length > 0) {
-      setHighlight(window.getSelection().toString());
+      highlightText = window.getSelection().toString();
+      setHighlight(highlightText);
     } else {
+      highlightText = report;
       setHighlight(report);
     }
-
+  
     // send a POST web request to a place
     try {
       const response = await fetch('/api/predict', {
@@ -27,10 +30,10 @@ const BasicForm = () => {
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
           image: imgUpload,
-          text: highlight
+          text: highlightText
         }),
       });
-
+  
       if (response.ok) {
         console.log('Form submitted successfully');
         const responseData = await response.json();
@@ -41,9 +44,10 @@ const BasicForm = () => {
     } catch (error) {
       console.error('Error submitting form:', error);
     }
-
+  
     setExplaining(false);
   };
+  
 
   const displaySelectedImage = (event, _) => {
     const file = event.target.files[0];
@@ -61,7 +65,7 @@ const BasicForm = () => {
   };
 
   return (
-    <div className="d-flex align-items-center justify-content-center" style={{ minHeight: '100vh' }}>
+    <div className="d-flex align-items-center justify-content-center" style={{ minHeight: '50vh' }}>
       <div className="card" style={{ Width: '400px' }}>
         <div className="card-body">
           <form onSubmit={handleExplain}>
