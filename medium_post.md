@@ -103,7 +103,8 @@ In our project, we have significantly enhanced the training of our experiment by
 * **Visualization and Debugging**: we leverage WandB's image logging feature for an in-depth visual analysis of model performance. By logging the heatmaps produced by our model alongside the corresponding ground truth boxes and text prompt, we gain valuable real-time insights into the model’s operational status during training phases. Notably, we observed that higher concentration regions within the heatmaps tend to cluster more accurately within the ground truth boxes as training progresses. This method of visualization not only aids in immediate performance assessment but also serves as a powerful debugging tool, helping identify and rectify issues dynamically, thereby ensuring consistent model improvement.
 
 <img src="./images/wandb_training.png" width="900"/>
-### Kubeflow
+
+### Machine Learning Automation: Kubeflow
 - To automate our model training workflow, we set up Kubeflow scripts to excute all the tasks on Vertex AI Pipelines. This allows us to easily re-run our ML pipeline when there is change in our data or model architecture. Our workflow includes three tasks: image preprocessing, data splitting, and serverless training. All tasks are continaerized using Docker. Once executed, Vertex AI will excute these tasks sequentially (screenshot below).  
 - We created a cli.py file that gives developers flexibility to control the subtasks. To run the workflow, we only need the following simple commands: 
     (a) Enter *src/workflow* and run __./Docker-shell.sh__;
@@ -113,7 +114,6 @@ In our project, we have significantly enhanced the training of our experiment by
     3. __-m__: download splitted data from GCP bucket; train the model on Vertex AI
     4. __-a__: execute all above tasks in the workflow. 
 - More flexible operations can be found inside the containers that handle multiple subtasks. For instance, if we simply want to download the raw images from GCP bucket, we can go to *src/data-preprocessor*, run *./Docker-shell.sh* and run *python cli.py -d* inside container to download data.
-
 
 ![Kubeflow_ML_workflow_Screenshot](./images/kubeflow.png)
 
