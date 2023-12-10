@@ -67,7 +67,13 @@ a Pipfile and Pipfile.lock, and a cli.py. Executing each step involves
 in cli.py in the container. In cli.py, various command arguments are provided to
 allow flexible operations in a single command.
 
-![](./images/ML_workflow.png)
+![](./images/solution_architecture.png)
+
+
+![](./images/solution_architecture2.png)
+
+
+![](./images/technical_architecture.png)
 
 ## Model development
 
