@@ -4,7 +4,7 @@ AC215-RadIQ
 \<Link Here\>
 
 ## Blog Post Link ##
-\<Link Here\>
+[https://medium.com/@martinma0077/test-on-medium-post-e00ca32ea532](https://medium.com/@martinma0077/test-on-medium-post-e00ca32ea532)
 
 
 Project Organization
