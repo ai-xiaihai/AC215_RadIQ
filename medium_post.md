@@ -47,6 +47,28 @@ Here is the distribution of the diseases in our dataset:
 
 ![](images/cats.png)
 
+## Overall Workflow
+
+An automated workflow with flexibility
+allows us to avoid manual operations over time.
+Our workflow executes the following docker containers in order:
+1. Data Preprocessing: In this step, we download images from GCP
+   Bucket, resize them, and upload them to GCP Bucket afterward.
+2. Data Splitting: Starting with downloading preprocessed images,
+   we split the images into training, validation, and test datasets.
+   Then these splitted datasets are uploaded back to GCP Bucket.
+3. Serverless Training: The serverless training container downloads
+   training, validation, and testing data and perform training with WandB
+   that track progress through automations of hyperparameter sweeping and image logging.
+
+Technically, each step contains a Dockerfile and docker-shell script,
+a Pipfile and Pipfile.lock, and a cli.py. Executing each step involves
+(a) running the Docker-shell.sh script, and then (b) executing commands specified
+in cli.py in the container. In cli.py, various command arguments are provided to
+allow flexible operations in a single command.
+
+![](./images/ML_workflow.png)
+
 ## Model development
 
 ### Related work
