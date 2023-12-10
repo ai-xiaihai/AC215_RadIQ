@@ -49,7 +49,7 @@ Here is the distribution of the diseases in our dataset:
 
 ## Overall Workflow
 
-An automated workflow with flexibility
+To enhance efficiency, we developed an automated ML workflow with flexibility, which
 allows us to avoid manual operations over time.
 Our workflow executes the following docker containers in order:
 1. Data Preprocessing: In this step, we download images from GCP
