@@ -1,7 +1,7 @@
 AC215-RadIQ
 ==============================
 ## Presentation Video ##
-\<Link Here\>
+[https://www.youtube.com/watch?v=sKogzdro9Vs](https://www.youtube.com/watch?v=sKogzdro9Vs)
 
 ## Blog Post Link ##
 [https://medium.com/@martinma0077/test-on-medium-post-e00ca32ea532](https://medium.com/@martinma0077/test-on-medium-post-e00ca32ea532)
