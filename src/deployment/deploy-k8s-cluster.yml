@@ -4,7 +4,7 @@
   gather_facts: false
 
   vars:
-    cluster_name: "mushroom-app-cluster"
+    cluster_name: "radiq-app-cluster"
     machine_type: "n2d-standard-2"
     machine_disk_size: 30
     initial_node_count: 2
@@ -150,11 +150,11 @@
                 run: frontend
             spec:
               containers:
-              - image: "gcr.io/{{ gcp_project }}/mushroom-app-frontend-react:{{ tag.stdout}}"
+              - image: "gcr.io/{{ gcp_project }}/radiq-frontend-react:{{ tag.stdout}}"
                 imagePullPolicy: IfNotPresent
                 name: frontend
                 ports:
-                - containerPort: 80
+                - containerPort: 3000
                   protocol: TCP
     when: cluster_state == "present"
 
@@ -185,7 +185,7 @@
                   secret:
                     secretName: gcp-service-key
               containers:
-              - image: gcr.io/{{ gcp_project }}/mushroom-app-api-service:{{ tag.stdout}}
+              - image: gcr.io/{{ gcp_project }}/biovil-api-service:{{ tag.stdout}}
                 imagePullPolicy: IfNotPresent
                 name: api
                 ports:
@@ -201,7 +201,9 @@
                   - name: GOOGLE_APPLICATION_CREDENTIALS
                     value: /secrets/gcp-service.json
                   - name: GCS_BUCKET_NAME
-                    value: mushroom-app-models
+                    value: radiq-app-data
+                  - name: WANDB_KEY
+                    value: 6ac94bce286531b3989581a1c8c85cb014a32883
     when: cluster_state == "present"
 
   - name: "Create Service for Frontend"

@@ -1,5 +1,11 @@
 AC215-RadIQ
 ==============================
+## Presentation Video ##
+[https://www.youtube.com/watch?v=sKogzdro9Vs](https://www.youtube.com/watch?v=sKogzdro9Vs)
+
+## Blog Post Link ##
+[https://medium.com/@martinma0077/test-on-medium-post-e00ca32ea532](https://medium.com/@martinma0077/test-on-medium-post-e00ca32ea532)
+
 
 Project Organization
 ---------
@@ -50,6 +56,80 @@ RadIQ
 
 **Project**
 This project aims to develop an application that allows patients to better understand their chest X-ray diagnosis through an interactive web interface. By integrating chest X-rays with their associated radiology reports through multi-modal learning, users can highlight any phrases in the report, which would light up the relevant region on the X-ray.
+
+### Milestone 6 ###
+In our recent milestone, we achieved significant progress in setting up the deployment process using Ansible and Kubernetes. This phase involved navigating several technical challenges. Our model, developed with PyTorch, initially faced compatibility issues with Google Cloud Platform (GCP). After exploring various solutions, we resolved this by aligning Python and Torch versions with GCP's requirements.
+
+The complex structure of our model, with its multiple components spread across different folders, presented another challenge during container deployment to GCP. We addressed this by reorganizing necessary files within the api-service, ensuring a smoother deployment process.
+
+Furthermore, our frontend container's dependency on the Vite build system, as opposed to the more common yarn build, required some adjustments. We successfully modified it to facilitate effective interaction with the api-service after deployment.
+
+These efforts have led to the successful integration of our application on a single GCP Virtual Machine (VM) instance. The application is now operational and can be accessed at http://34.42.139.78.
+
+<img src="./images/web.png" width="900"/>
+
+We chose a single GCP Virtual Machine (VM) instance intead of Kubernetes Engine is due to cost concerns.
+
+**API Service Container** This container has all the python files to run and expose thr backend apis.
+
+To run the container locally:
+
+- Open a terminal and go to `/src/api-service`
+- Run `sh docker-shell.sh`
+- Once inside the docker container run `uvicorn_server`
+- To view and test APIs go to `http://localhost:9000/docs`
+
+**Frontend Container** This container contains all the files to develop and build the app frontend. There are dockerfiles for both development and production
+
+To run the container locally:
+
+- Open a terminal and go to `/src/frontend`
+- Run `sh docker-shell.sh`
+- If running the container for the first time, run `yarn install`
+- Once inside the docker container run `yarn run build`, which actually makes use of the vite build into the `/dist` folder.
+- Go to `` to access the app locally
+
+**Deployment Container** This container helps manage building and deploying all our app containers. The deployment is to GCP and all docker images go to GCR.
+
+To run the container locally:
+
+- If any changes are made to the frontend container, go into the frontend container and run `yarn run build`
+- Open a terminal and go to `/src/deployment`
+- Run `sh docker-shell.sh`
+- Build and Push Docker Containers to GCR (Google Container Registry) `ansible-playbook deploy-docker-images.yml -i inventory.yml`
+
+If you also want to deploy with scaling using Kubernetes Engine on Google Cloud Platform (GCP):
+- Create & deploy Kubernetes cluster: `ansible-playbook deploy-k8s-cluster.yml -i inventory.yml --extra-vars cluster_state=present`
+- Delete Kubernetes cluster: `ansible-playbook deploy-k8s-cluster.yml -i inventory.yml --extra-vars cluster_state=absent`
+
+
+**Kubernetes**
+
+Here is our deployed app on a Kubernetes cluster in GCP:
+
+![](./images/k8s_gcp.png)
+
+**Overall Workflow**
+
+An automated workflow with flexibility
+allows us to avoid manual operations over time.
+Our workflow executes the following docker containers in order:
+1. Data Preprocessing: In this step, we download images from GCP
+   Bucket, resize them, and upload them to GCP Bucket afterward.
+2. Data Splitting: Starting with downloading preprocessed images,
+   we split the images into training, validation, and test datasets.
+   Then these splitted datasets are uploaded back to GCP Bucket.
+3. Serverless Training: The serverless training container downloads
+   training, validation, and testing data and perform training with WandB
+   that track progress through automations of hyperparameter sweeping and image logging.
+
+Technically, each step contains a Dockerfile and docker-shell script,
+a Pipfile and Pipfile.lock, and a cli.py. Executing each step involves
+(a) running the Docker-shell.sh script, and then (b) executing commands specified
+in cli.py in the container. In cli.py, various command arguments are provided to
+allow flexible operations in a single command.
+
+![](./images/ML_workflow.png)
 
 ### Milestone 5 ###
 
@@ -106,6 +186,7 @@ Key Components
     * Compute instance creation and provisioning on GCP.
     * Docker container setup on the compute instance.
     * Web server configuration and setup.
+    * Kubernetes cluster creation & deployment & deletion.
 
 Here is our deployed app on a single VM in GCP:
 
